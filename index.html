@@ -318,60 +318,61 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .sheet-wrap{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;
   display:grid;place-items:center;overflow:auto}
 .sheet{
+  --fs:1px;--sp:1px;
   width:100%;max-width:430px;background:#fff;color:#12233b;border-radius:6px;overflow:hidden;
   box-shadow:0 12px 30px -12px rgba(16,38,68,.35);border:1px solid #e6ecf4;
   font-family:var(--font);position:relative;display:flex;flex-direction:column;min-height:600px}
-.sheet .band{background:var(--rx);color:#fff;padding:14px 16px 12px;display:flex;gap:12px;align-items:center;position:relative;overflow:hidden}
-.sheet .band::after{content:"";position:absolute;right:-30px;top:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.07)}
-.sheet .band .logo{width:52px;height:52px;border-radius:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
-  display:grid;place-items:center;flex:none;overflow:hidden;font-family:var(--serif);font-size:22px;font-weight:700}
+.sheet .band{background:var(--rx);color:#fff;padding:calc(var(--sp) * 14) calc(var(--sp) * 16) calc(var(--sp) * 12);display:flex;gap:12px;align-items:center;position:relative;overflow:hidden}
+.sheet .band::after{content:"";position:absolute;right:calc(var(--sp) * -30);top:calc(var(--sp) * -40);width:calc(var(--sp) * 130);height:calc(var(--sp) * 130);border-radius:50%;background:rgba(255,255,255,.07)}
+.sheet .band .logo{width:calc(var(--sp) * 52);height:calc(var(--sp) * 52);border-radius:calc(var(--sp) * 10);background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  display:grid;place-items:center;flex:none;overflow:hidden;font-family:var(--serif);font-size:calc(var(--sp) * 22);font-weight:700}
 .sheet .band .logo img{width:100%;height:100%;object-fit:contain;background:#fff}
 .sheet .band .who-rx{min-width:0;flex:1}
-.sheet .band h3{font-size:14.5px;line-height:1.2;color:#fff;letter-spacing:-.01em}
-.sheet .band .spec{font-size:11px;opacity:.9;margin-top:2px}
-.sheet .band .doc{font-size:10.5px;opacity:.85;margin-top:3px;line-height:1.35}
-.sheet .band .rxsym{font-family:var(--serif);font-size:30px;font-weight:700;opacity:.55;line-height:1;margin-left:auto;flex:none}
-.sheet .body{padding:13px 16px;flex:1;display:flex;flex-direction:column;gap:9px}
-.sheet .pt{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;background:#f5f8fc;border:1px solid #e4ebf4;
-  border-radius:7px;padding:9px 10px;font-size:11px}
+.sheet .band h3{font-size:calc(var(--fs) * 14.5);line-height:1.2;color:#fff;letter-spacing:-.01em}
+.sheet .band .spec{font-size:calc(var(--fs) * 11);opacity:.9;margin-top:2px}
+.sheet .band .doc{font-size:calc(var(--fs) * 10.5);opacity:.85;margin-top:3px;line-height:1.35}
+.sheet .band .rxsym{font-family:var(--serif);font-size:calc(var(--sp) * 30);font-weight:700;opacity:.55;line-height:1;margin-left:auto;flex:none}
+.sheet .body{padding:calc(var(--sp) * 13) calc(var(--sp) * 16);flex:1;display:flex;flex-direction:column;gap:calc(var(--sp) * 9);position:relative}
+.sheet .pt{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--sp) * 4) calc(var(--sp) * 10);background:#f5f8fc;border:1px solid #e4ebf4;
+  border-radius:calc(var(--sp) * 7);padding:calc(var(--sp) * 9) calc(var(--sp) * 10);font-size:calc(var(--fs) * 11)}
 .sheet .pt .f{display:flex;gap:4px;min-width:0}
 .sheet .pt .f b{color:#5b6f88;font-weight:700;flex:none}
 .sheet .pt .f span{color:#12233b;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet .pt .full{grid-column:1/-1}
-.sheet .dx{font-size:11px;color:#12233b}
+.sheet .dx{font-size:calc(var(--fs) * 11);color:#12233b}
 .sheet .dx b{color:#5b6f88;font-weight:700}
-.sheet .rxline{display:flex;align-items:center;gap:6px;font-family:var(--serif);font-size:19px;font-weight:700;color:var(--rx);border-bottom:1.5px solid var(--rx);padding-bottom:3px}
-.sheet .rxline small{font-family:var(--font);font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7b8ea6;margin-left:auto}
-.sheet .meds{display:flex;flex-direction:column;gap:7px;flex:1}
-.sheet .m{font-size:11px;padding-bottom:6px;border-bottom:1px dotted #dbe3ee}
+.sheet .rxline{display:flex;align-items:center;gap:calc(var(--sp) * 6);font-family:var(--serif);font-size:calc(var(--fs) * 19);font-weight:700;color:var(--rx);border-bottom:1.5px solid var(--rx);padding-bottom:calc(var(--sp) * 3)}
+.sheet .rxline small{font-family:var(--font);font-size:calc(var(--fs) * 9.5);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7b8ea6;margin-left:auto}
+.sheet .meds{display:flex;flex-direction:column;gap:calc(var(--sp) * 7);flex:0 0 auto}
+.sheet .m{font-size:calc(var(--fs) * 11);padding-bottom:calc(var(--sp) * 6);border-bottom:1px dotted #dbe3ee}
 .sheet .m:last-child{border-bottom:0}
-.sheet .m .n{display:flex;gap:6px;align-items:baseline}
-.sheet .m .n .num{font-weight:800;color:var(--rx);font-size:10px;flex:none}
-.sheet .m .n strong{font-size:11.8px;letter-spacing:.005em}
+.sheet .m .n{display:flex;gap:calc(var(--sp) * 6);align-items:baseline}
+.sheet .m .n .num{font-weight:800;color:var(--rx);font-size:calc(var(--fs) * 10);flex:none}
+.sheet .m .n strong{font-size:calc(var(--fs) * 11.8);letter-spacing:.005em}
 .sheet .m .n .conc{color:#43566e;font-weight:600}
-.sheet .m .d{color:#43566e;font-size:10.7px;margin-top:2px;line-height:1.45;padding-left:15px}
+.sheet .m .d{color:#43566e;font-size:calc(var(--fs) * 10.7);margin-top:calc(var(--sp) * 2);line-height:1.45;padding-left:calc(var(--sp) * 15)}
 .sheet .m .d b{color:#12233b}
-.sheet .ind{background:#f5f8fc;border-left:3px solid var(--rx);border-radius:0 5px 5px 0;padding:6px 9px;font-size:10.6px;color:#33475f;line-height:1.45}
-.sheet .ind b{color:#12233b;display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7b8ea6;margin-bottom:2px}
-.sheet .foot{display:flex;gap:12px;align-items:flex-end;padding:0 16px 11px;margin-top:auto}
+.sheet .ind{background:#f5f8fc;border-left:calc(var(--sp) * 3) solid var(--rx);border-radius:0 5px 5px 0;padding:calc(var(--sp) * 6) calc(var(--sp) * 9);font-size:calc(var(--fs) * 10.6);color:#33475f;line-height:1.45}
+.sheet .ind b{color:#12233b;display:block;font-size:calc(var(--fs) * 9);letter-spacing:.08em;text-transform:uppercase;color:#7b8ea6;margin-bottom:2px}
+.sheet .foot{display:flex;gap:calc(var(--sp) * 12);align-items:flex-end;padding:0 calc(var(--sp) * 16) calc(var(--sp) * 11);margin-top:auto}
 .sheet .foot .qr{flex:0 0 auto;min-width:0}
 .sheet .foot .sign{flex:1 1 auto;min-width:0}
 .sheet .sign{flex:1;text-align:center;min-width:0}
-.sheet .sign .sigbox{position:relative;height:52px;display:flex;align-items:flex-end;justify-content:center;width:100%;max-width:185px;margin:0 auto}
-.sheet .sign .sigbox img{max-height:56px;max-width:100%;object-fit:contain;display:block;margin:0 auto 2px}
-.sheet .sign .line{border-top:1.5px solid #93a5bb;margin:0 auto 3px;width:100%;max-width:185px;height:0}
-.sheet .sign .nm{font-size:10.5px;font-weight:800;color:#12233b;line-height:1.25}
-.sheet .sign .cm{font-size:9.5px;color:#5b6f88;line-height:1.35}
+.sheet .sign .sigbox{position:relative;height:calc(var(--sp) * 52);display:flex;align-items:flex-end;justify-content:center;width:100%;max-width:calc(var(--sp) * 185);margin:0 auto}
+.sheet .sign .sigbox img{max-height:calc(var(--sp) * 56);max-width:100%;object-fit:contain;display:block;margin:0 auto 2px}
+.sheet .sign .line{border-top:1.5px solid #93a5bb;margin:0 auto calc(var(--sp) * 3);width:100%;max-width:calc(var(--sp) * 185);height:0}
+.sheet .sign .nm{font-size:calc(var(--fs) * 10.5);font-weight:800;color:#12233b;line-height:1.25}
+.sheet .sign .cm{font-size:calc(var(--fs) * 9.5);color:#5b6f88;line-height:1.35}
 .sheet .qr{flex:none;text-align:center}
 .sheet .qr svg{display:block;width:auto;height:auto;max-width:none;max-height:none;border:1px solid #e4ebf4;border-radius:5px;padding:2px;background:#fff}
-.sheet .qr .cd{font-family:ui-monospace,Menlo,monospace;font-size:7.6px;font-weight:800;color:#12233b;margin-top:3px;letter-spacing:.02em}
-.sheet .strip{background:#f0f4fa;border-top:1px solid #e4ebf4;padding:5px 16px;display:flex;justify-content:space-between;gap:8px;
-  font-size:7.6px;color:#7b8ea6;line-height:1.3}
+.sheet .qr .cd{font-family:ui-monospace,Menlo,monospace;font-size:calc(var(--fs) * 7.6);font-weight:800;color:#12233b;margin-top:calc(var(--sp) * 3);letter-spacing:.02em}
+.sheet .strip{background:#f0f4fa;border-top:1px solid #e4ebf4;padding:calc(var(--sp) * 5) calc(var(--sp) * 16);display:flex;justify-content:space-between;gap:8px;
+  font-size:calc(var(--fs) * 7.6);color:#7b8ea6;line-height:1.3}
 .sheet .strip .cpy{font-weight:800;color:#43566e;white-space:nowrap}
 .sheet .watermark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:5}
-.sheet .watermark span{font-size:52px;font-weight:900;color:rgba(165,32,43,.14);transform:rotate(-28deg);
+.sheet .watermark span{font-size:calc(var(--fs) * 52);font-weight:900;color:rgba(165,32,43,.14);transform:rotate(-28deg);
   border:5px solid rgba(165,32,43,.14);padding:8px 26px;border-radius:14px;letter-spacing:.1em}
-.sheet .num-idx{position:absolute;right:12px;bottom:34px;font-size:7px;color:#b6c2d1}
+.sheet .num-idx{position:absolute;right:12px;bottom:34px;font-size:calc(var(--fs) * 7);color:#b6c2d1}
 
 .preview-note{display:flex;gap:9px;align-items:flex-start;background:var(--warn-100);border:1px solid #f0dcae;
   border-radius:10px;padding:10px 12px;font-size:11.8px;color:#6d4a00;margin-top:12px;line-height:1.45}
@@ -503,18 +504,22 @@ body.is-verify #verify{display:block}
    IMPRESIÓN
    ============================================================ */
 #printRoot{display:none}
-@page{size:A5 portrait;margin:8mm}
+@page{margin:8mm}
 @media print{
   html,body{background:#fff!important;margin:0!important;padding:0!important;min-height:0!important;height:auto!important}
-  /* ocultar TODA la interfaz: app, auth, verificación, avisos, FAB, footer */
   #app,#auth,#verify,#toasts,#modal,.mobile-tabs,.no-print,#fabPreview,.site-footer{display:none!important}
   #printRoot{display:block!important;position:static!important;margin:0!important;padding:0!important}
-  #printRoot .sheet{box-shadow:none!important;border:0!important;border-radius:0!important;
-    max-width:none!important;width:100%!important;min-height:0!important;margin:0!important}
+  /* La unidad de escala = ancho real del papel / 430  → A4, A5, carta, oficio… */
+  #printRoot .sheet,#printRoot .sheet *{--fs:clamp(0.72px, calc(100vw / 455), 1.6px);--sp:clamp(0.72px, calc(100vw / 455), 1.8px)}
+  #printRoot .sheet{
+    box-shadow:none!important;border:0!important;border-radius:0!important;
+    width:100%!important;max-width:none!important;min-height:100vh!important;
+    margin:0!important;padding-bottom:calc(var(--sp) * 6)}
   #printRoot .sheet::after{display:none!important}
   .sheet .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sheet .pt,.sheet .ind,.sheet .strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sheet .watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sheet .watermark span{font-size:calc(var(--fs) * 46)}
 }
 </style>
 </head>
@@ -3548,7 +3553,7 @@ window.closeModal = closeModal;
 
 function startSession(u){
   ST.user = u;
-  ST.recs = LS.get(dataKey('rec'), []) || [];
+  ST.recs = (LS.get(dataKey('rec'), []) || []).map(r=>Object.assign({}, r, {v:1}));
   ST.settings = Object.assign({}, DEF_SETTINGS, LS.get(dataKey('set'), {}) || {});
   ST.draft = LS.get(dataKey('draft'), null);
   $('#auth').classList.add('hidden');
@@ -3684,12 +3689,6 @@ function renderVerify(){
       </div>
 
       <div class="vf-block">
-        <div class="vf-h"><svg><use href="#i-user"/></svg><h3>Paciente</h3></div>
-        <div class="vf-name" style="font-size:14px">${esc((d.pac||'').replace(/\./g,' '))||'—'}</div>
-        <div class="vf-line">El diagnóstico, la edad y el documento se omiten por privacidad.</div>
-      </div>
-
-      <div class="vf-block">
         <div class="vf-h"><svg><use href="#i-pill"/></svg><h3>Medicamentos</h3></div>
         ${meds.length ? meds.map((m,i)=>`
           <div class="vf-med">
@@ -3702,9 +3701,6 @@ function renderVerify(){
     ${d.hash?`<div class="vf-note"><svg><use href="#i-shield"/></svg>
       <span>Huella de integridad del documento: <b class="mono">${esc(d.hash)}</b>.
       Si este código no coincide con el impreso en la receta, el documento fue alterado.</span></div>`:''}
-
-    <div class="vf-note"><svg><use href="#i-info"/></svg>
-      <span>Esta verificación confirma que el código existe y es coherente. <b>No sustituye</b> la firma digital certificada (Ley 27269): una imagen de firma no equivale a firma digital.</span></div>
 
     <div class="vf-actions">
       <button class="btn btn-primary" id="vfBack"><svg><use href="#i-home"/></svg> Ir a Rx Pro</button>
@@ -4057,6 +4053,7 @@ function renderSheet(r, opts){
 
       ${r.indic?`<div class="ind"><b>Indicaciones</b>${esc(r.indic)}</div>`:''}
       ${r.tipo==='controlada'?`<div class="ind" style="border-left-color:#a5202b;color:#7d2a32;background:#fde4e6"><b style="color:#a5202b">Receta controlada</b>Requiere además receta especial numerada según DIGEMID.</div>`:''}
+      <div style="flex:1 1 auto;min-height:calc(var(--sp) * 8)"></div>
     </div>
 
     <div class="foot${longName?' stack-sign':''}">
@@ -4092,14 +4089,16 @@ function renderSheetPreview(){
   if(!el) return;
   if(!has && !ST.lastEmitted){
     el.innerHTML = renderSheet(SAMPLE,{draft:true});
+    applyScaleAll();
     const b=$('#previewBadge'); if(b){b.textContent='Ejemplo';b.className='badge badge-line';}
   }else{
     el.innerHTML = renderSheet(r,{draft:true});
+    applyScaleAll();
     const b=$('#previewBadge'); if(b){b.textContent='Borrador';b.className='badge badge-warn';}
   }
 }
-function renderProfilePreview(){ const el=$('#sheetProfilePreview'); if(el) el.innerHTML = renderSheet(SAMPLE,{draft:true}); }
-function renderSettingsPreview(){ const el=$('#sheetSettingsPreview'); if(el) el.innerHTML = renderSheet(SAMPLE,{draft:true}); }
+function renderProfilePreview(){ const el=$('#sheetProfilePreview'); if(el){ el.innerHTML = renderSheet(SAMPLE,{draft:true}); applyScaleAll(); } }
+function renderSettingsPreview(){ const el=$('#sheetSettingsPreview'); if(el){ el.innerHTML = renderSheet(SAMPLE,{draft:true}); applyScaleAll(); } }
 
 /* ==================== Emitir ==================== */
 $('#btnEmit').onclick = async ()=>{
@@ -4156,11 +4155,36 @@ $('#btnClear').onclick = ()=>{
   };
 };
 
+/* ==================== Ajuste de la hoja al papel ====================
+   El tamaño de letra y los espaciados se calculan en proporción al ancho
+   real del papel, así que la receta se ve bien igual en A4 que en A5.   */
+function fitSheet(sheet){
+  if(!sheet) return;
+  const w = sheet.getBoundingClientRect().width || 430;
+  const u = Math.min(1.4, Math.max(0.8, w / 460));   // unidad en px para pantalla
+  sheet.style.setProperty('--fs', u.toFixed(3)+'px');
+  sheet.style.setProperty('--sp', u.toFixed(3)+'px');
+}
+function applyScaleAll(){
+  $$('.sheet').forEach(fitSheet);
+}
+window.addEventListener('resize', ()=>applyScaleAll());
+
 /* ==================== Imprimir / PDF ==================== */
 function doPrint(rec){
   if(!rec){ toast('wait','Nada que imprimir','Emite la receta primero.'); return; }
-  $('#printRoot').innerHTML = renderSheet(rec,{draft:false});
-  setTimeout(()=>{ window.print(); }, 120);
+  const root = $('#printRoot');
+  root.innerHTML = renderSheet(rec,{draft:false});
+  const sheet = root.querySelector('.sheet');
+  if(sheet) fitSheet(sheet);
+  // esperar a que firma/logo estén decodificados antes de abrir el diálogo
+  const imgs = Array.from(root.querySelectorAll('img'));
+  const listo = ()=>setTimeout(()=>{ try{window.print();}catch(e){} }, 220);
+  if(!imgs.length) return listo();
+  let pend = imgs.length;
+  const tic = ()=>{ if(--pend<=0) listo(); };
+  imgs.forEach(im=>{ if(im.complete) return tic(); im.onload=tic; im.onerror=tic; });
+  setTimeout(()=>{ if(pend>0){ pend=0; listo(); } }, 1200);   // red de seguridad
 }
 $('#btnPreviewPdf').onclick = ()=>{
   const r = ST.lastEmitted || readForm();
