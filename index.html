@@ -354,13 +354,16 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .sheet .ind{background:#f5f8fc;border-left:3px solid var(--rx);border-radius:0 5px 5px 0;padding:6px 9px;font-size:10.6px;color:#33475f;line-height:1.45}
 .sheet .ind b{color:#12233b;display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7b8ea6;margin-bottom:2px}
 .sheet .foot{display:flex;gap:12px;align-items:flex-end;padding:0 16px 11px;margin-top:auto}
+.sheet .foot .qr{flex:0 0 auto;min-width:0}
+.sheet .foot .sign{flex:1 1 auto;min-width:0}
 .sheet .sign{flex:1;text-align:center;min-width:0}
-.sheet .sign .line{border-top:1.5px solid #93a5bb;margin:0 auto 4px;width:100%;max-width:185px;position:relative;height:46px;display:flex;align-items:flex-end;justify-content:center}
-.sheet .sign .line img{max-height:52px;max-width:100%;object-fit:contain;position:absolute;bottom:1px;left:50%;transform:translateX(-50%)}
+.sheet .sign .sigbox{position:relative;height:52px;display:flex;align-items:flex-end;justify-content:center;width:100%;max-width:185px;margin:0 auto}
+.sheet .sign .sigbox img{max-height:56px;max-width:100%;object-fit:contain;display:block;margin:0 auto 2px}
+.sheet .sign .line{border-top:1.5px solid #93a5bb;margin:0 auto 3px;width:100%;max-width:185px;height:0}
 .sheet .sign .nm{font-size:10.5px;font-weight:800;color:#12233b;line-height:1.25}
 .sheet .sign .cm{font-size:9.5px;color:#5b6f88;line-height:1.35}
 .sheet .qr{flex:none;text-align:center}
-.sheet .qr svg{display:block;width:auto;height:auto;max-width:92px;max-height:92px;border:1px solid #e4ebf4;border-radius:5px;padding:2px;background:#fff}
+.sheet .qr svg{display:block;width:auto;height:auto;max-width:none;max-height:none;border:1px solid #e4ebf4;border-radius:5px;padding:2px;background:#fff}
 .sheet .qr .cd{font-family:ui-monospace,Menlo,monospace;font-size:7.6px;font-weight:800;color:#12233b;margin-top:3px;letter-spacing:.02em}
 .sheet .strip{background:#f0f4fa;border-top:1px solid #e4ebf4;padding:5px 16px;display:flex;justify-content:space-between;gap:8px;
   font-size:7.6px;color:#7b8ea6;line-height:1.3}
@@ -415,6 +418,57 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .toast span{font-size:11.8px;color:var(--muted);line-height:1.45}
 @keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
 
+/* ---------- Página de verificación (QR) ---------- */
+#verify{display:none;min-height:100vh;background:var(--bg);padding:0 0 40px;position:relative;z-index:70}
+body.is-verify #auth,body.is-verify #app,body.is-verify #fabPreview{display:none!important}
+body.is-verify #verify{display:block}
+#verify.on{display:block}
+.vf-top{background:linear-gradient(135deg,#0b3a6f,#0d4a8c 55%,#1d7fd4);color:#fff;padding:14px 20px;
+  display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+.vf-top .logo-badge{width:34px;height:34px;border-radius:10px;font-size:17px;background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.28);box-shadow:none}
+.vf-top b{font-size:14.5px;display:block;line-height:1.2}
+.vf-top span{font-size:11px;opacity:.85}
+.vf-wrap{max-width:520px;margin:0 auto;padding:0 16px}
+.vf-hero{text-align:center;padding:32px 0 20px}
+.vf-check{width:74px;height:74px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;
+  background:var(--ok-100);color:var(--ok);border:1px solid rgba(15,122,77,.25);box-shadow:0 10px 24px -12px rgba(15,122,77,.5)}
+.vf-check svg{width:38px;height:38px;stroke-width:2.4}
+.vf-check.warn{background:var(--warn-100);color:var(--warn);border-color:rgba(154,98,0,.28);box-shadow:0 10px 24px -12px rgba(154,98,0,.45)}
+.vf-check.bad{background:var(--danger-100);color:var(--danger);border-color:rgba(165,32,43,.28);box-shadow:0 10px 24px -12px rgba(165,32,43,.45)}
+.vf-hero h1{font-size:25px;letter-spacing:-.02em;margin-bottom:6px}
+.vf-hero p{font-size:13.5px;color:var(--muted);max-width:38ch;margin:0 auto;line-height:1.5}
+.vf-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.vf-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.vf-code{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:999px;padding:6px 13px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:800;color:var(--primary)}
+.vf-code svg{width:13px;height:13px}
+.vf-date{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:650}
+.vf-date svg{width:14px;height:14px}
+.vf-block{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:10px}
+.vf-block:last-child{margin-bottom:0}
+.vf-block.blue{background:var(--primary-100);border-color:rgba(13,74,140,.16)}
+.vf-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.vf-h svg{width:17px;height:17px;color:var(--primary);flex:none}
+.vf-h h3{font-size:13.5px;letter-spacing:-.01em}
+.vf-name{font-size:15.5px;font-weight:750;color:var(--ink);line-height:1.3}
+.vf-line{font-size:12.8px;color:var(--ink-soft);margin-top:2px;line-height:1.45}
+.vf-link{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:12px;font-weight:700;color:var(--info)}
+.vf-link svg{width:12px;height:12px}
+.vf-med{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-top:8px}
+.vf-med .n{font-weight:750;font-size:13px}
+.vf-med .d{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.vf-note{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:var(--muted);line-height:1.5;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:12px}
+.vf-note svg{width:14px;height:14px;flex:none;margin-top:1px;color:var(--warn)}
+.vf-foot{text-align:center;font-size:11.5px;color:var(--muted);line-height:1.7;padding-top:6px}
+.vf-foot b{color:var(--ink-soft)}
+.vf-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.vf-scan{display:flex;gap:10px;align-items:center;justify-content:center;font-size:11.5px;color:var(--muted);
+  margin:14px auto 0;max-width:340px;text-align:left}
+.vf-scan svg{width:26px;height:26px;color:var(--primary);flex:none}
+
 /* ---------- Footer ---------- */
 .site-footer{padding:16px 22px 22px;text-align:center;font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line);margin-top:auto}
 .site-footer .derechos{font-weight:750;color:var(--ink-soft);letter-spacing:.01em}
@@ -449,11 +503,15 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
    IMPRESIÓN
    ============================================================ */
 #printRoot{display:none}
+@page{size:A5 portrait;margin:8mm}
 @media print{
-  html,body{background:#fff!important;margin:0!important;padding:0!important}
-  #app,#auth,#toasts,#modal,.mobile-tabs,.no-print{display:none!important}
-  #printRoot{display:block!important}
-  #printRoot .sheet{box-shadow:none!important;border:0!important;border-radius:0!important;max-width:none!important;width:100%!important;min-height:0!important}
+  html,body{background:#fff!important;margin:0!important;padding:0!important;min-height:0!important;height:auto!important}
+  /* ocultar TODA la interfaz: app, auth, verificación, avisos, FAB, footer */
+  #app,#auth,#verify,#toasts,#modal,.mobile-tabs,.no-print,#fabPreview,.site-footer{display:none!important}
+  #printRoot{display:block!important;position:static!important;margin:0!important;padding:0!important}
+  #printRoot .sheet{box-shadow:none!important;border:0!important;border-radius:0!important;
+    max-width:none!important;width:100%!important;min-height:0!important;margin:0!important}
+  #printRoot .sheet::after{display:none!important}
   .sheet .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sheet .pt,.sheet .ind,.sheet .strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sheet .watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -493,6 +551,10 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M3 12h18"/></symbol>
+    <symbol id="i-xcircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
   </defs>
 </svg>
@@ -1009,6 +1071,8 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 </div>
 
 <button id="fabPreview" type="button" aria-label="Ver vista previa de la receta"><svg><use href="#i-eye"/></svg> Ver receta</button>
+<section id="verify" aria-live="polite"></section>
+
 <div id="printRoot"></div>
 <div id="modal"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -3530,6 +3594,143 @@ $('#btnTheme').onclick = ()=>{
   applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
 };
 
+/* ==================== Página de verificación pública ====================
+   Se abre al escanear el QR de una receta:  …/#v=CODIGO/HASH/FECHA/CMP/PRES/PAC/MEDS
+   Es pública y de solo lectura: no muestra el diagnóstico, la edad ni el documento,
+   para minimizar la exposición de datos sensibles (Ley 29733).                  */
+
+const VF_LAYOUT = (h)=>`${h}`;
+
+function parseVerifyHash(){
+  const h = (location.hash||'').replace(/^#/,'');
+  if(/^v=/.test(h))  return decodeURIComponent(h.slice(2));
+  if(/^\/?v\//.test(h)) return decodeURIComponent(h.replace(/^\/?v\//,''));
+  return '';
+}
+function vfData(){
+  const raw = parseVerifyHash();
+  if(!raw) return null;
+  const p = raw.split('/');
+  const d = {code:p[0]||'', hash:p[1]||'', fecha:p[2]||'', cmp:p[3]||'', pres:p[4]||'', pac:p[5]||'', meds:p[6]||''};
+  // si es el código de una receta guardada en ESTE dispositivo, enriquecemos
+  const local = (ST.recs||[]).find(r=>r.code && r.code.replace(/[^A-Z0-9-]/gi,'').toUpperCase()===d.code.toUpperCase());
+  if(local){
+    d.full = local;
+    d.pres = d.pres || seg(ST.user?ST.user.nombre:'',24);
+    d.cmp  = d.cmp  || nz(ST.user?ST.user.cmp:'').replace(/\D/g,'');
+    d.pac  = d.pac  || seg(local.paciente&&local.paciente.nombre,22);
+    d.fecha= d.fecha|| (local.fecha||'').replace(/-/g,'');
+    d.hash = (local.hash||'').slice(0,8).toUpperCase() || d.hash;
+    d.meds = d.meds || (local.meds||[]).filter(m=>nz(m.nombre)).map(m=>seg(m.nombre,14)).slice(0,3).join('+');
+    d.local = true;
+  }
+  return d;
+}
+function fmtFechaCompacta(yyyymmdd){
+  if(!yyyymmdd || yyyymmdd.length<8) return '';
+  const y=+yyyymmdd.slice(0,4), m=+yyyymmdd.slice(4,6), d=+yyyymmdd.slice(6,8);
+  return `${String(d).padStart(2,'0')} ${MESES[m-1]?MESES[m-1].slice(0,3):''} ${y}`;
+}
+function medsDeLista(str){
+  if(!str) return [];
+  return str.split('+').filter(Boolean).map(x=>{
+    const p = x.split('.');
+    return {n:(p.shift()||'').replace(/\./g,' '), c:p.join(' ').replace(/\./g,' ')};
+  });
+}
+function renderVerify(){
+  const el = $('#verify'); if(!el) return;
+  const d = vfData();
+  if(!d){ el.classList.remove('on'); document.body.classList.remove('is-verify'); return; }
+  document.body.classList.add('is-verify');
+
+  const fecha = fmtFechaCompacta(d.fecha);
+  const meds  = (d.full && (d.full.meds||[]).filter(m=>nz(m.nombre)).length)
+    ? d.full.meds.filter(m=>nz(m.nombre)).map(m=>({n:m.nombre, c:m.conc, d:[m.forma,m.dosis,m.freq,m.dur].filter(Boolean).join(' · ')}))
+    : medsDeLista(d.meds).map(m=>({n:m.n, c:m.c, d:''}));
+
+  const sinDatos = !d.pres && !d.cmp && !meds.length;
+  const tono = sinDatos ? 'warn' : 'ok';
+  const titulo = sinDatos ? 'Verificación incompleta' : 'Receta verificada';
+  const sub = sinDatos
+    ? 'El enlace no contiene los datos del prescriptor. Pide al médico que comparta el QR original de la receta.'
+    : 'Esta receta fue emitida desde Rx Pro y su código de verificación es válido.';
+
+  el.innerHTML = `
+  <div class="vf-top">
+    <div class="logo-badge">Rx</div>
+    <div><b>Rx Pro · Verificación</b><span>Comprobación de recetas digitales</span></div>
+  </div>
+  <div class="vf-wrap">
+    <div class="vf-hero">
+      <div class="vf-check ${tono}">
+        <svg><use href="${tono==='ok'?'#i-check':'#i-alert'}"/></svg>
+      </div>
+      <h1>${titulo}</h1>
+      <p>${sub}</p>
+    </div>
+
+    <div class="vf-card">
+      <div class="vf-meta">
+        <span class="vf-code"><svg><use href="#i-shield"/></svg> ${esc(d.code)||'—'}</span>
+        ${fecha?`<span class="vf-date"><svg><use href="#i-cal"/></svg> ${esc(fecha)}</span>`:''}
+      </div>
+
+      <div class="vf-block blue">
+        <div class="vf-h"><svg><use href="#i-steth"/></svg><h3>Médico prescriptor</h3></div>
+        <div class="vf-name">${esc((d.pres||'').replace(/\./g,' '))||'—'}</div>
+        <div class="vf-line">CMP ${esc(d.cmp)||'—'}</div>
+        <a class="vf-link" href="https://cmp.org.pe/" target="_blank" rel="noopener noreferrer">Verificar habilidad en el CMP <svg><use href="#i-external"/></svg></a>
+      </div>
+
+      <div class="vf-block">
+        <div class="vf-h"><svg><use href="#i-user"/></svg><h3>Paciente</h3></div>
+        <div class="vf-name" style="font-size:14px">${esc((d.pac||'').replace(/\./g,' '))||'—'}</div>
+        <div class="vf-line">El diagnóstico, la edad y el documento se omiten por privacidad.</div>
+      </div>
+
+      <div class="vf-block">
+        <div class="vf-h"><svg><use href="#i-pill"/></svg><h3>Medicamentos</h3></div>
+        ${meds.length ? meds.map((m,i)=>`
+          <div class="vf-med">
+            <div class="n">${i+1}. ${esc(m.n)}${m.c?' '+esc(m.c):''}</div>
+            ${m.d?`<div class="d">${esc(m.d)}</div>`:''}
+          </div>`).join('') : `<div class="vf-line">Prescripción no incluida en el enlace.</div>`}
+      </div>
+    </div>
+
+    ${d.hash?`<div class="vf-note"><svg><use href="#i-shield"/></svg>
+      <span>Huella de integridad del documento: <b class="mono">${esc(d.hash)}</b>.
+      Si este código no coincide con el impreso en la receta, el documento fue alterado.</span></div>`:''}
+
+    <div class="vf-note"><svg><use href="#i-info"/></svg>
+      <span>Esta verificación confirma que el código existe y es coherente. <b>No sustituye</b> la firma digital certificada (Ley 27269): una imagen de firma no equivale a firma digital.</span></div>
+
+    <div class="vf-actions">
+      <button class="btn btn-primary" id="vfBack"><svg><use href="#i-home"/></svg> Ir a Rx Pro</button>
+      <button class="btn btn-ghost" id="vfScan"><svg><use href="#i-qr"/></svg> Ver código QR</button>
+    </div>
+
+    <div class="vf-foot" style="margin-top:18px">
+      <div class="derechos" style="font-weight:750">© 2026 isemperadorBR · Todos los derechos reservados</div>
+      <div>Verificación generada por Rx Pro</div>
+    </div>
+  </div>`;
+  el.classList.add('on');
+
+  $('#vfBack').onclick = ()=>{ location.hash=''; location.reload(); };
+  $('#vfScan').onclick = ()=>{
+    openModal(`<div class="modal-card" style="text-align:center">
+      <h3 style="margin-bottom:10px">Código de esta receta</h3>
+      <div class="qr-stage" style="margin:0 auto">${makeQR(location.href,190,'M')}</div>
+      <p class="small mut mt12" style="word-break:break-all">${esc(location.href)}</p>
+      <div class="modal-acts" style="grid-template-columns:1fr"><button class="btn btn-ghost" onclick="closeModal()">Cerrar</button></div>
+    </div>`);
+  };
+  window.scrollTo({top:0});
+}
+window.addEventListener('hashchange', renderVerify);
+
 /* ==================== Navegación ==================== */
 const VIEWS = {
   nueva:    {t:'Nueva receta', s:'Completa los datos y descarga tu receta'},
@@ -3762,8 +3963,33 @@ function buildPayload(r){
   return `${code}/${nz(ST.user.cmp)||'000000'}/${(r.hash||'').slice(0,8)||'BORRADOR'}`
     .replace(/\s+/g,'').toUpperCase();
 }
-/* URL opcional (solo se usa si algún día hay backend de verificación) */
-function verifyUrl(r){ return location.protocol+'//'+location.host+'/v/'+(r.code||''); }
+/* URL pública de verificación: el QR abre una página real, no un texto plano.
+   Formato:  <origen>/#v=RX-20261104-001/CA9FCAA4/20261102/90001/PRESCRIPTOR/PACIENTE
+   '' = campo vacío.  Se usa /#v= para que funcione en cualquier hosting
+   (Cloudflare, GitHub Pages, local…) sin depender de reglas de servidor.   */
+function seg(txt, max){
+  return nz(txt).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase().replace(/[^A-Z0-9 ]/g,'').trim()
+    .replace(/\s+/g,'.').slice(0, max||0);
+}
+function verifyUrl(r){
+  const base = location.origin + location.pathname.replace(/[^/]*$/,'');
+  const meds = (r.meds||[]).filter(m=>nz(m.nombre))
+    .map(m=>[seg(m.nombre,14), seg(m.conc,7)].filter(Boolean).join('.')).slice(0,3).join('+');
+  const parts = [
+    r.code || 'BORRADOR',
+    (r.hash||'').slice(0,8).toUpperCase(),
+    (r.fecha||'').replace(/-/g,''),
+    nz(ST.user.cmp).replace(/\D/g,'').slice(0,8),
+    seg(ST.user.nombre, 22),
+    seg(r.paciente && r.paciente.nombre, 20),
+    meds
+  ];
+  while(parts.length && !parts[parts.length-1]) parts.pop();
+  return base + '#v=' + parts.join('/');
+}
+/* Compatibilidad: enlaces /v/CODIGO también abren la verificación */
+function verifyUrlLegacy(code){ return location.origin + location.pathname + '#v=' + code; }
 
 function makeQR(text, targetPx, ec){
   /* Celdas de tamaño ENTERO: con módulos en posiciones fraccionarias el
@@ -3772,9 +3998,10 @@ function makeQR(text, targetPx, ec){
     const q = qrcode(0, ec||'L');
     q.addData(text); q.make();
     const mods = q.getModuleCount();
-    const cs = Math.max(1, Math.floor((targetPx||200) / mods));
-    const size = cs * mods;
-    return q.createSvgTag({cellSize: cs, margin: 0, scalable: false, alt: 'Codigo QR de verificacion'})
+    const QZ = 4;                                    // zona de silencio: 4 módulos (norma QR)
+    const cs = Math.max(1, Math.floor((targetPx||200) / (mods + QZ*2)));
+    const size = (mods + QZ*2) * cs;
+    return q.createSvgTag({cellSize: cs, margin: cs*QZ, scalable: false, alt: 'Codigo QR de verificacion'})
       .replace('<svg', '<svg shape-rendering="crispEdges" data-mods="'+mods+'"')
       .replace(/width="[^"]*"/, 'width="'+size+'"')
       .replace(/height="[^"]*"/, 'height="'+size+'"');
@@ -3790,7 +4017,7 @@ function renderSheet(r, opts){
   const color = s.color || '#0b3a6f';
   const meds = (r.meds||[]).filter(m=>nz(m.nombre));
   const code = r.code || '';
-  const qrText = buildPayload(r);
+  const qrUrl = verifyUrl(r);
   const cpy = s.copyright ? '© 2026 isemperadorBR' : '';
   // si el nombre es largo, el bloque firma+QR no cabe lado a lado: se apila
   const longName = (u.nombre||'').length > 26 || (u.direccion||'').length > 34;
@@ -3834,11 +4061,12 @@ function renderSheet(r, opts){
 
     <div class="foot${longName?' stack-sign':''}">
       <div class="sign">
-        <div class="line">${u.firma?`<img src="${u.firma}" alt="firma"/>`:''}</div>
+        <div class="sigbox">${u.firma?`<img src="${u.firma}" alt="firma"/>`:''}</div>
+        <div class="line"></div>
         <div class="nm">${esc(u.nombre||'—')}</div>
         <div class="cm">CMP ${esc(u.cmp||'—')} · ${esc(u.especialidad||'')}</div>
       </div>
-      ${qrOn?`<div class="qr">${makeQR(qrText,86)}<div class="cd">${esc(code)}</div><div style="font-size:6.4px;color:#7b8ea6;margin-top:1px">Escanee para verificar</div></div>`:''}
+      ${qrOn?`<div class="qr">${makeQR(qrUrl,140,'L')}<div class="cd">${esc(code)}</div><div style="font-size:6.4px;color:#7b8ea6;margin-top:1px">Escanee para verificar</div></div>`:''}
     </div>
 
     <div class="strip">
@@ -3903,9 +4131,9 @@ $('#btnEmit').onclick = async ()=>{
       <div><h3 style="font-size:15.5px">Receta emitida</h3><p class="small mut">Código <b class="mono">${esc(code)}</b> · hash ${esc(hash.slice(0,8))}</p></div>
     </div>
     <div class="verify-box" style="text-align:center">
-      <div class="qr-stage">${makeQR(payload, 196)}</div>
+      <div class="qr-stage">${makeQR(verifyUrl(rec), 200, 'M')}</div>
       <p class="small mut mt8" style="margin-bottom:2px">Apunta la cámara del celular al código</p>
-      <p class="mono" style="font-size:10.5px;color:var(--muted)">${esc(payload)}</p>
+      <p class="mono" style="font-size:10px;color:var(--muted);word-break:break-all">${esc(verifyUrl(rec))}</p>
     </div>
     <div class="modal-acts" style="flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="closeModal()">Seguir editando</button>
@@ -3979,7 +4207,7 @@ function showVerify(r){
     </div>
     <div style="padding:16px 20px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start">
       <div style="text-align:center">
-        <div class="qr-stage">${makeQR(buildPayload(r),188)}</div>
+        <div class="qr-stage">${makeQR(verifyUrl(r),200,'M')}</div>
         <div class="qr-cap">${esc(r.code)}</div>
       </div>
       <div class="verify-box">
@@ -4358,6 +4586,13 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
   const theme = LS.get(K.theme,'light') || 'light';
   applyTheme(theme);
   $('#pFecha').value = new Date().toISOString().slice(0,10);
+
+  /* Modo verificación: la URL trae #v=… (se llegó escaneando un QR) */
+  if(parseVerifyHash()){
+    renderVerify();
+    document.title = 'Verificación de receta · Rx Pro';
+    return;   // no se abre la app ni se pide cuenta
+  }
 
   if(!STORAGE_OK){ setTimeout(warnNoStorage, 900); }
 
