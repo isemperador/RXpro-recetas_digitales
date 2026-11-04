@@ -5,7 +5,7 @@
    La app es 100% local, así que el SW solo acelera el arranque
    y permite usarla con el celular sin señal.
    ============================================================ */
-const VERSION = 'rxpro-v1.0.0';
+const VERSION = 'rxpro-v1.0.1';
 const CACHE = 'rxpro-' + VERSION;
 
 const SHELL = [

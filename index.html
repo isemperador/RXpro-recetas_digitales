@@ -6,11 +6,8 @@
 <title>Rx Pro · Recetas Médicas Digitales</title>
 <meta name="description" content="Emisor de recetas médicas digitales con verificación QR, historial, plantillas de dosis y PDF imprimible. Funciona 100% en tu navegador."/>
 <meta name="theme-color" content="#0b3a6f"/>
-<meta name="author" content="isemperadorBR"/>
-<meta name="application-name" content="Rx Pro"/>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b3a6f'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='34' font-weight='700' fill='%23fff' text-anchor='middle'%3ERx%3C/text%3E%3C/svg%3E"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <meta property="og:type" content="website"/>
 <meta property="og:image" content="og-image.png"/>
@@ -18,6 +15,9 @@
 <meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="og-image.png"/>
+<meta name="author" content="isemperadorBR"/>
+<meta name="application-name" content="Rx Pro"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b3a6f'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='34' font-weight='700' fill='%23fff' text-anchor='middle'%3ERx%3C/text%3E%3C/svg%3E"/>
 <style>
 /* ============================================================
    Rx Pro — Recetas Médicas Digitales
@@ -41,9 +41,14 @@
 html[data-theme="dark"]{
   --bg:#0a1220; --surface:#101c2e; --surface-2:#152437; --ink:#e8eef7; --ink-soft:#b7c6da;
   --muted:#8b9cb3; --line:#22334b; --line-strong:#2f4460; --primary-100:#16293f;
+  --danger:#ff9aa2; --danger-100:rgba(165,32,43,.20);
+  --ok:#5ee2a0; --ok-100:rgba(15,122,77,.20);
+  --warn:#fbbf24; --warn-100:rgba(154,98,0,.20);
   --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow:0 10px 24px -8px rgba(0,0,0,.6);
   --shadow-lg:0 24px 48px -16px rgba(0,0,0,.7);
 }
+html[data-theme="dark"] .btn-danger:hover{background:rgba(165,32,43,.32)}
+html[data-theme="dark"] .btn-ok:hover{background:rgba(15,122,77,.32)}
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -273,15 +278,38 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .toggle.on{background:var(--ok)}
 .toggle.on::after{transform:translateX(19px)}
 
+/* ---------- Firma larga: QR debajo ---------- */
+.sheet .foot.stack-sign{flex-direction:column;align-items:center;gap:8px}
+.sheet .foot.stack-sign .sign{width:100%}
+.sheet .foot.stack-sign .qr{display:flex;flex-direction:column;align-items:center}
+
 /* ---------- Uploads /firma ---------- */
-.upload{border:2px dashed var(--line-strong);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;
-  transition:.15s;background:var(--surface-2)}
-.upload:hover{border-color:var(--primary-600);background:var(--primary-100)}
-.upload svg{width:22px;height:22px;color:var(--muted);margin-bottom:6px}
-.upload p{font-size:12.5px;font-weight:650;color:var(--ink-soft)}
-.upload span{font-size:11px;color:var(--muted)}
-.upload.has{padding:8px;border-style:solid;border-color:var(--ok)}
-.upload img{max-height:70px;max-width:100%;object-fit:contain;display:block;margin:0 auto}
+/* --- Cargador de firma / logo --- */
+.up-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:760px){.up-grid{grid-template-columns:1fr}}
+.up-card{display:flex;flex-direction:column;gap:9px;min-width:0}
+.up-head{display:flex;align-items:center;gap:8px;justify-content:space-between;min-height:20px}
+.up-head .lbl{margin:0}
+.up-drop{position:relative;height:116px;border:2px dashed var(--line-strong);border-radius:11px;cursor:pointer;
+  display:grid;place-items:center;overflow:hidden;transition:border-color .15s,box-shadow .15s;
+  background-color:#f8fafc;
+  background-image:linear-gradient(45deg,#e9eef5 25%,transparent 25%,transparent 75%,#e9eef5 75%),
+                   linear-gradient(45deg,#e9eef5 25%,transparent 25%,transparent 75%,#e9eef5 75%);
+  background-size:14px 14px;background-position:0 0,7px 7px}
+.up-drop:hover{border-color:var(--primary-600);box-shadow:0 0 0 3px rgba(13,74,140,.10)}
+.up-drop:focus-within{border-color:var(--primary-600);box-shadow:0 0 0 3px rgba(13,74,140,.18)}
+.up-drop.has{border-style:solid;border-color:#a9cdb9;background:#fff}
+.up-drop img{max-height:92px;max-width:92%;object-fit:contain;display:block;filter:none;background:transparent}
+.up-drop .ph{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;padding:8px;color:#7f8fa6}
+.up-drop .ph svg{width:20px;height:20px;stroke:#94a5ba}
+.up-drop .ph b{font-size:12.5px;color:#54677f;font-weight:650}
+.up-drop .ph span{font-size:10.5px;color:#8b9cb3;line-height:1.35}
+.up-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.up-actions .btn{min-height:34px;font-size:12.5px;padding:6px 10px}
+.up-actions .btn:only-child{grid-column:1/-1}
+.up-note{display:flex;gap:5px;align-items:flex-start;font-size:10.8px;color:var(--muted);line-height:1.4}
+.up-note svg{width:12px;height:12px;flex:none;margin-top:2px}
+#sigPadWrap{border:1px solid var(--line);border-radius:var(--r);padding:10px;background:var(--surface-2)}
 #sigPad{width:100%;height:120px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:#fff;touch-action:none;cursor:crosshair;display:block}
 
 /* ============================================================
@@ -332,7 +360,7 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .sheet .sign .nm{font-size:10.5px;font-weight:800;color:#12233b;line-height:1.25}
 .sheet .sign .cm{font-size:9.5px;color:#5b6f88;line-height:1.35}
 .sheet .qr{flex:none;text-align:center}
-.sheet .qr svg{display:block;width:72px;height:72px;border:1px solid #e4ebf4;border-radius:5px;padding:3px;background:#fff}
+.sheet .qr svg{display:block;width:auto;height:auto;max-width:92px;max-height:92px;border:1px solid #e4ebf4;border-radius:5px;padding:2px;background:#fff}
 .sheet .qr .cd{font-family:ui-monospace,Menlo,monospace;font-size:7.6px;font-weight:800;color:#12233b;margin-top:3px;letter-spacing:.02em}
 .sheet .strip{background:#f0f4fa;border-top:1px solid #e4ebf4;padding:5px 16px;display:flex;justify-content:space-between;gap:8px;
   font-size:7.6px;color:#7b8ea6;line-height:1.3}
@@ -404,6 +432,9 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 @media(min-width:961px){#fabPreview{bottom:22px}}
 
 /* ---------- Verificación (modal QR) ---------- */
+.qr-stage{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;display:inline-block;line-height:0}
+.qr-stage svg{display:block;width:auto;height:auto;max-width:100%}
+.qr-cap{font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:800;color:#12233b;letter-spacing:.02em;margin-top:8px;line-height:1.4}
 .verify-box{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:14px;font-size:12.5px;line-height:1.6}
 .verify-box .kv{display:grid;grid-template-columns:120px 1fr;gap:4px 10px}
 .verify-box .kv b{color:var(--muted);font-weight:700;font-size:11.5px;padding-top:2px}
@@ -754,26 +785,22 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 
               <div class="card card-pad">
                 <div class="section-step"><span class="n">2</span> Firma y logo</div>
-                <div class="grid2">
-                  <div>
-                    <div class="lbl">Firma escaneada</div>
-                    <label class="upload" id="upSig" for="fileSig">
-                      <svg><use href="#i-upload"/></svg>
-                      <p>Subir imagen de firma</p><span>PNG con fondo transparente · máx. 2 MB</span>
-                    </label>
+                <div class="up-grid">
+                  <!-- FIRMA -->
+                  <div class="up-card">
+                    <div class="up-head">
+                      <span class="lbl">Firma escaneada</span>
+                      <span class="badge badge-line" id="sigState" style="font-size:9.5px">Sin firma</span>
+                    </div>
+                    <label class="up-drop" id="upSig" for="fileSig" tabindex="0" role="button" aria-label="Subir imagen de firma"></label>
                     <input type="file" id="fileSig" accept="image/*" style="display:none"/>
-                    <button class="btn btn-ghost btn-sm btn-block mt8" type="button" id="btnDrawSig"><svg><use href="#i-pen"/></svg> Dibujar firma</button>
-                    <button class="btn btn-danger btn-sm btn-block mt8" type="button" id="btnDelSig" style="display:none"><svg><use href="#i-trash"/></svg> Quitar firma</button>
-                  </div>
-                  <div>
-                    <div class="lbl">Logo del consultorio</div>
-                    <label class="upload" id="upLogo" for="fileLogo">
-                      <svg><use href="#i-upload"/></svg>
-                      <p>Subir logo</p><span>PNG/JPG · se mostrará en el encabezado</span>
-                    </label>
-                    <input type="file" id="fileLogo" accept="image/*" style="display:none"/>
-                    <button class="btn btn-danger btn-sm btn-block mt8" type="button" id="btnDelLogo" style="display:none"><svg><use href="#i-trash"/></svg> Quitar logo</button>
-                    <div id="sigPadWrap" style="display:none" class="mt12">
+                    <div class="up-actions">
+                      <button class="btn btn-ghost btn-sm" type="button" id="btnDrawSig"><svg><use href="#i-pen"/></svg> Dibujar</button>
+                      <button class="btn btn-ghost btn-sm" type="button" id="btnPickSig"><svg><use href="#i-upload"/></svg> Subir</button>
+                      <button class="btn btn-danger btn-sm" type="button" id="btnDelSig" style="display:none;grid-column:1/-1"><svg><use href="#i-trash"/></svg> Quitar firma</button>
+                    </div>
+                    <div class="up-note"><svg><use href="#i-info"/></svg><span>PNG con fondo transparente, máx. 2 MB. Se imprime sobre la línea de firma.</span></div>
+                    <div id="sigPadWrap" style="display:none">
                       <canvas id="sigPad"></canvas>
                       <div class="row mt8" style="gap:6px">
                         <button class="btn btn-ok btn-sm" type="button" id="btnSaveSigPad"><svg><use href="#i-check"/></svg> Guardar</button>
@@ -781,6 +808,20 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
                         <button class="btn btn-ghost btn-sm" type="button" id="btnCloseSigPad">Cerrar</button>
                       </div>
                     </div>
+                  </div>
+                  <!-- LOGO -->
+                  <div class="up-card">
+                    <div class="up-head">
+                      <span class="lbl">Logo del consultorio</span>
+                      <span class="badge badge-line" id="logoState" style="font-size:9.5px">Sin logo</span>
+                    </div>
+                    <label class="up-drop" id="upLogo" for="fileLogo" tabindex="0" role="button" aria-label="Subir logo del consultorio"></label>
+                    <input type="file" id="fileLogo" accept="image/*" style="display:none"/>
+                    <div class="up-actions">
+                      <button class="btn btn-ghost btn-sm" type="button" id="btnPickLogo"><svg><use href="#i-upload"/></svg> Subir logo</button>
+                      <button class="btn btn-danger btn-sm" type="button" id="btnDelLogo" style="display:none"><svg><use href="#i-trash"/></svg> Quitar</button>
+                    </div>
+                    <div class="up-note"><svg><use href="#i-info"/></svg><span>Aparece en la cabecera de la receta. Ideal: PNG cuadrado o con fondo blanco.</span></div>
                   </div>
                 </div>
               </div>
@@ -3700,23 +3741,46 @@ function restoreDraft(){
 });
 
 /* ==================== Render de la hoja ==================== */
-function buildPayload(r){
-  const code = r.code || 'BORRADOR';
-  const medsTxt = (r.meds||[]).map((m,i)=>{
+/* Cadena canónica del documento: se usa SOLO para calcular el hash de integridad,
+   no se mete en el QR (un texto de 200 caracteres hace el código ilegible).   */
+function docString(r){
+  const medsTxt = (r.meds||[]).filter(m=>nz(m.nombre)).map((m,i)=>{
     const base = [m.nombre, m.conc].filter(Boolean).join(' ');
     const dosis = [m.dosis, m.freq, m.dur].filter(Boolean).join(' · ');
     return `${i+1}) ${base}${dosis?' — '+dosis:''}`;
   }).join(' | ');
-  return [`RXPRO/1`, `COD:${code}`, `PRES:${nz(ST.user.nombre)}`, `CMP:${nz(ST.user.cmp)}`,
-    `ESP:${nz(ST.user.especialidad)}`, `FECHA:${r.fecha}`, `PAC:${nz(r.paciente?.nombre)}`,
-    `MED:${medsTxt}`].join('\n');
+  return [`RXPRO/1`,`COD:${r.code||'BORRADOR'}`,`PRES:${nz(ST.user.nombre)}`,`CMP:${nz(ST.user.cmp)}`,
+    `ESP:${nz(ST.user.especialidad)}`,`FECHA:${r.fecha||''}`,`PAC:${nz(r.paciente?.nombre)}`,
+    `DX:${nz(r.dx)}`,`MED:${medsTxt}`,`IND:${nz(r.indic)}`].join('\n');
 }
-function makeQR(text, px){
+
+/* Payload CORTO a propósito: un QR de más de ~50 caracteres salta a 45-57 módulos
+   y a 72-150 px queda ilegible para cualquier lector. Con este formato entra en
+   29-33 módulos y se lee sin problemas incluso impreso en A5.              */
+function buildPayload(r){
+  const code = r.code || 'BORRADOR';
+  return `${code}/${nz(ST.user.cmp)||'000000'}/${(r.hash||'').slice(0,8)||'BORRADOR'}`
+    .replace(/\s+/g,'').toUpperCase();
+}
+/* URL opcional (solo se usa si algún día hay backend de verificación) */
+function verifyUrl(r){ return location.protocol+'//'+location.host+'/v/'+(r.code||''); }
+
+function makeQR(text, targetPx, ec){
+  /* Celdas de tamaño ENTERO: con módulos en posiciones fraccionarias el
+     rasterizado sale borroso y muchos lectores no abren el código.        */
   try{
-    const q = qrcode(0,'M'); q.addData(text); q.make();
-    const svg = q.createSvgTag({cellSize:2, margin:0, scalable:true});
-    return svg.replace('<svg','<svg style="width:'+px+'px;height:'+px+'px"');
-  }catch(e){ return `<div style="font-size:8px;color:#999">QR no disponible</div>`; }
+    const q = qrcode(0, ec||'L');
+    q.addData(text); q.make();
+    const mods = q.getModuleCount();
+    const cs = Math.max(1, Math.floor((targetPx||200) / mods));
+    const size = cs * mods;
+    return q.createSvgTag({cellSize: cs, margin: 0, scalable: false, alt: 'Codigo QR de verificacion'})
+      .replace('<svg', '<svg shape-rendering="crispEdges" data-mods="'+mods+'"')
+      .replace(/width="[^"]*"/, 'width="'+size+'"')
+      .replace(/height="[^"]*"/, 'height="'+size+'"');
+  }catch(e){
+    return '<div style="font-size:9px;color:#a5202b;padding:6px">QR no disponible</div>';
+  }
 }
 function renderSheet(r, opts){
   opts = opts||{};
@@ -3728,6 +3792,8 @@ function renderSheet(r, opts){
   const code = r.code || '';
   const qrText = buildPayload(r);
   const cpy = s.copyright ? '© 2026 isemperadorBR' : '';
+  // si el nombre es largo, el bloque firma+QR no cabe lado a lado: se apila
+  const longName = (u.nombre||'').length > 26 || (u.direccion||'').length > 34;
 
   return `<div class="${cls.join(' ')}" style="--rx:${color}">
     ${draft && s.draft ? '<div class="watermark"><span>BORRADOR</span></div>' : ''}
@@ -3766,13 +3832,13 @@ function renderSheet(r, opts){
       ${r.tipo==='controlada'?`<div class="ind" style="border-left-color:#a5202b;color:#7d2a32;background:#fde4e6"><b style="color:#a5202b">Receta controlada</b>Requiere además receta especial numerada según DIGEMID.</div>`:''}
     </div>
 
-    <div class="foot">
+    <div class="foot${longName?' stack-sign':''}">
       <div class="sign">
         <div class="line">${u.firma?`<img src="${u.firma}" alt="firma"/>`:''}</div>
         <div class="nm">${esc(u.nombre||'—')}</div>
         <div class="cm">CMP ${esc(u.cmp||'—')} · ${esc(u.especialidad||'')}</div>
       </div>
-      ${qrOn?`<div class="qr">${makeQR(qrText,72)}<div class="cd">${esc(code)}</div><div style="font-size:6.4px;color:#7b8ea6;margin-top:1px">Escanee para verificar</div></div>`:''}
+      ${qrOn?`<div class="qr">${makeQR(qrText,86)}<div class="cd">${esc(code)}</div><div style="font-size:6.4px;color:#7b8ea6;margin-top:1px">Escanee para verificar</div></div>`:''}
     </div>
 
     <div class="strip">
@@ -3820,9 +3886,9 @@ $('#btnEmit').onclick = async ()=>{
   }
   const seq = ST.recs.length + 1;
   const code = 'RX-'+r.fecha.replace(/-/g,'')+'-'+String(seq).padStart(3,'0');
-  const payload = buildPayload({...r, code});
-  const hash = (await sha256(payload)).slice(0,12).toUpperCase();
+  const hash = (await sha256(docString({...r, code}))).slice(0,12).toUpperCase();
   const rec = {...r, code, hash, id:uid(), creadaEn:new Date().toISOString(), tipo:r.tipo};
+  const payload = buildPayload(rec);   // ya incluye el hash real
   ST.recs.unshift(rec);
   saveRecs();
   ST.lastEmitted = rec;
@@ -3837,8 +3903,9 @@ $('#btnEmit').onclick = async ()=>{
       <div><h3 style="font-size:15.5px">Receta emitida</h3><p class="small mut">Código <b class="mono">${esc(code)}</b> · hash ${esc(hash.slice(0,8))}</p></div>
     </div>
     <div class="verify-box" style="text-align:center">
-      <div style="display:inline-block">${makeQR(payload, 150)}</div>
-      <p class="small mut mt8">Escanea para verificar los datos de esta receta</p>
+      <div class="qr-stage">${makeQR(payload, 196)}</div>
+      <p class="small mut mt8" style="margin-bottom:2px">Apunta la cámara del celular al código</p>
+      <p class="mono" style="font-size:10.5px;color:var(--muted)">${esc(payload)}</p>
     </div>
     <div class="modal-acts" style="flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="closeModal()">Seguir editando</button>
@@ -3911,7 +3978,10 @@ function showVerify(r){
       <button class="btn btn-ghost btn-icon" onclick="closeModal()" aria-label="Cerrar"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
     </div>
     <div style="padding:16px 20px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start">
-      <div style="text-align:center">${makeQR(buildPayload(r),160)}<div class="mono small" style="margin-top:6px;font-weight:800">${esc(r.code)}</div></div>
+      <div style="text-align:center">
+        <div class="qr-stage">${makeQR(buildPayload(r),188)}</div>
+        <div class="qr-cap">${esc(r.code)}</div>
+      </div>
       <div class="verify-box">
         <div class="kv" style="grid-template-columns:96px 1fr">
           <b>Prescriptor</b><span>${esc(ST.user.nombre)}</span>
@@ -4053,11 +4123,16 @@ function paintProfile(){
   upSig.classList.toggle('has', !!ST.user.firma);
   upLogo.classList.toggle('has', !!ST.user.logo);
   upSig.innerHTML = ST.user.firma
-    ? `<img src="${ST.user.firma}" alt="firma"/><p class="mt8" style="font-size:11px;color:var(--ok)">Firma cargada · toca para cambiar</p>`
-    : `<svg><use href="#i-upload"/></svg><p>Subir imagen de firma</p><span>PNG transparente · máx. 2 MB</span>`;
+    ? `<img src="${ST.user.firma}" alt="Firma cargada"/>`
+    : `<div class="ph"><svg><use href="#i-pen"/></svg><b>Sube tu firma</b><span>PNG transparente · máx. 2 MB</span></div>`;
   upLogo.innerHTML = ST.user.logo
-    ? `<img src="${ST.user.logo}" alt="logo"/><p class="mt8" style="font-size:11px;color:var(--ok)">Logo cargado · toca para cambiar</p>`
-    : `<svg><use href="#i-upload"/></svg><p>Subir logo</p><span>PNG/JPG · se muestra en el encabezado</span>`;
+    ? `<img src="${ST.user.logo}" alt="Logo cargado"/>`
+    : `<div class="ph"><svg><use href="#i-upload"/></svg><b>Sube tu logo</b><span>PNG o JPG · se ve en la cabecera</span></div>`;
+  const sigBadge=$('#sigState'), logoBadge=$('#logoState');
+  if(sigBadge){ sigBadge.textContent = ST.user.firma?'Cargada':'Sin firma';
+    sigBadge.className = 'badge '+(ST.user.firma?'badge-ok':'badge-line'); sigBadge.style.fontSize='9.5px'; }
+  if(logoBadge){ logoBadge.textContent = ST.user.logo?'Cargado':'Sin logo';
+    logoBadge.className = 'badge '+(ST.user.logo?'badge-ok':'badge-line'); logoBadge.style.fontSize='9.5px'; }
   $('#btnDelSig').style.display = ST.user.firma?'':'none';
   $('#btnDelLogo').style.display = ST.user.logo?'':'none';
   renderProfilePreview();
@@ -4085,6 +4160,12 @@ function fileToDataUrl(file, cb, maxKB){
   fr.onerror=()=>toast('bad','No se pudo leer','Intenta con otro archivo.');
   fr.readAsDataURL(file);
 }
+$('#btnPickSig').onclick = ()=>$('#fileSig').click();
+$('#btnPickLogo').onclick = ()=>$('#fileLogo').click();
+['#upSig','#upLogo'].forEach(sel=>{
+  const el=$(sel); if(!el) return;
+  el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); el.click(); } });
+});
 $('#fileSig').onchange = e=>{ const f=e.target.files[0]; if(!f) return; fileToDataUrl(f,url=>{ ST.user.firma=url; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Firma cargada','Se mostrará en tus recetas.'); }); e.target.value=''; };
 $('#fileLogo').onchange= e=>{ const f=e.target.files[0]; if(!f) return; fileToDataUrl(f,url=>{ ST.user.logo=url; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Logo cargado',''); }); e.target.value=''; };
 $('#btnDelSig').onclick = ()=>{ ST.user.firma=''; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Firma eliminada',''); };
@@ -4268,7 +4349,7 @@ const fab=$('#fabPreview'); if(fab) fab.onclick = openPreviewModal;
 /* ==================== PWA: service worker ==================== */
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{ /* file:// o contexto restringido: la app funciona igual */ });
+    navigator.serviceWorker.register('sw.js').catch(()=>{ /* file:// o contexto restringido */ });
   });
 }
 
