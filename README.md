@@ -148,10 +148,63 @@ Luego abre <http://localhost:8080>.
 | Rutas amigables | `_redirects` |
 
 Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
-`const VERSION = 'rxpro-v1.0.1';`
+`const VERSION = 'rxpro-v1.3.0';`
 
 ---
 
+---
+
+## 🗄️ Base de datos D1 (opcional)
+
+La app funciona sin base de datos. Si la conectas, cada receta emitida queda
+registrada y la página de verificación deja de fiarse solo del QR: compara
+contra el registro, de modo que **un QR inventado sale como «Receta no
+registrada»**. Si no la conectas, todo sigue igual (verificación por huella).
+
+**Qué se guarda:** código, huella de integridad, CMP y fecha.
+**Qué NO se guarda:** nombre del paciente, edad, documento, diagnóstico ni
+medicamentos. Así no se administra una base de datos de salud (Ley 29733).
+
+### Puesta en marcha (una sola vez, todo desde el panel)
+
+1. **Crear la base** — Cloudflare → *Workers y Pages* → **D1** → *Crear base de datos*
+   → nombre `rxpro-db`.
+2. **Crear la tabla** — entra a la base → pestaña **Consola** → pega el contenido
+   de `d1-schema.sql` → *Ejecutar*. Debe decir «Ejecutado».
+3. **Publicar la función** — el repo ya trae `functions/api/registro.js`.
+   (En el uploader web de GitHub: *Add file → Create new file* → escribe
+   `functions/api/registro.js` en el nombre y pega el archivo.)
+4. **Conectar** — Cloudflare → tu proyecto de Pages → *Settings* → **Functions**
+   → *D1 database bindings* → *Add binding*:
+   - Variable name: `RX_DB`  ← **exactamente así**
+   - D1 database: `rxpro-db`
+5. **Redesplegar** — *Deployments* → *Retry deployment* (o sube cualquier archivo).
+
+### Comprobar que quedó conectada
+
+Abre en el navegador: `https://TU-DOMINIO/api/registro?codigo=RX-20260101-001`
+
+- `{"ok":true,"registrada":false}` → **conectada** (ese código no existe, es normal).
+- `{"ok":false,"error":"sin_base"}` → falta el paso 4 (o el nombre de la variable).
+- HTML o 404 → falta el paso 3 (la carpeta `functions/`).
+
+### Saber cuántas recetas se emitieron
+
+En la consola de D1:
+
+```sql
+SELECT fecha, COUNT(*) AS recetas FROM recetas GROUP BY fecha ORDER BY fecha DESC;
+```
+
+Para anular una receta: `UPDATE recetas SET estado='anulada' WHERE codigo='RX-…';`
+
+### Nota de privacidad
+
+Al estar alojada fuera del país, la base solo contiene datos no sensibles
+(código, huella, CMP, fecha). Mientras no añadas nombres de pacientes, no
+necesitas consentimiento adicional ni medidas especiales de la Ley 29733.
+
+---
 ## ✅ Checklist antes de compartir el enlace
 
 - [ ] Cambiaste `TU-USUARIO` en las instrucciones y pusiste tu dominio real.
@@ -160,6 +213,7 @@ Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
 - [ ] Añadiste tu firma y logo en *Mi perfil*.
 - [ ] Decidiste si quieres el diagnóstico visible o no (*Ajustes*).
 - [ ] Guardaste un respaldo `.json` de prueba.
+- [ ] Probaste el endpoint `/api/registro` (si usas base de datos).
 
 ---
 

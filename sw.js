@@ -2,10 +2,10 @@
    Rx Pro · Service Worker
    © 2026 isemperadorBR. Todos los derechos reservados.
    Estrategia: precache del shell + stale-while-revalidate.
-   La app es 100% local, así que el SW solo acelera el arranque
+   La app funciona sin conexión; el SW solo acelera el arranque
    y permite usarla con el celular sin señal.
    ============================================================ */
-const VERSION = 'rxpro-v1.2.1';
+const VERSION = 'rxpro-v1.3.0';
 const CACHE = 'rxpro-' + VERSION;
 
 const SHELL = [
@@ -41,7 +41,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // no interceptar terceros
+  if (url.origin !== self.location.origin) return;             // no interceptar terceros
+  if (url.pathname.indexOf('/api/') > -1) return;              // el registro D1 nunca se cachea
 
   // Navegación: red primero, cache como respaldo (para funcionar offline)
   if (req.mode === 'navigate') {

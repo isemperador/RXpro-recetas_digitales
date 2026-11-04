@@ -332,6 +332,7 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .sheet .band .spec{font-size:calc(var(--fs) * 11);opacity:.9;margin-top:2px}
 .sheet .band .doc{font-size:calc(var(--fs) * 10.5);opacity:.85;margin-top:3px;line-height:1.35}
 .sheet .band .rxsym{font-family:var(--serif);font-size:calc(var(--sp) * 30);font-weight:700;opacity:.55;line-height:1;margin-left:auto;flex:none}
+.sheet .spacer{flex:1 1 auto;min-height:calc(var(--sp) * 8)}
 .sheet .body{padding:calc(var(--sp) * 13) calc(var(--sp) * 16);flex:1;display:flex;flex-direction:column;gap:calc(var(--sp) * 9);position:relative}
 .sheet .pt{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--sp) * 4) calc(var(--sp) * 10);background:#f5f8fc;border:1px solid #e4ebf4;
   border-radius:calc(var(--sp) * 7);padding:calc(var(--sp) * 9) calc(var(--sp) * 10);font-size:calc(var(--fs) * 11)}
@@ -507,16 +508,24 @@ body.is-verify #verify{display:block}
 #printRoot{display:none}
 @page{margin:8mm}
 @media print{
-  html,body{background:#fff!important;margin:0!important;padding:0!important;min-height:0!important;height:auto!important}
+  /* Cadena de altura al 100 %: en impresión, el 100 % de html es el alto REAL del
+     papel.  Con 100vh o 100vw no funciona: en el celular 100vh = alto del visor
+     (≈844 px), no el del papel, y la hoja se estiraba hasta desbordar en una
+     segunda página en blanco.  Con % la hoja mide exactamente una página.      */
+  html,body{background:#fff!important;margin:0!important;padding:0!important;height:100%!important;min-height:0!important}
   #app,#auth,#verify,#toasts,#modal,.mobile-tabs,.no-print,#fabPreview,.site-footer{display:none!important}
-  #printRoot{display:block!important;position:static!important;margin:0!important;padding:0!important}
-  /* La unidad de escala = ancho real del papel / 430  → A4, A5, carta, oficio… */
-  #printRoot .sheet,#printRoot .sheet *{--fs:clamp(0.72px, calc(100vw / 455), 1.6px);--sp:clamp(0.72px, calc(100vw / 455), 1.8px)}
+  #printRoot{display:block!important;position:static!important;margin:0!important;padding:0!important;height:100%!important}
+  /* La unidad de escala = ancho real del papel / 455 → A4, A5, carta, oficio… */
+  /* --rx-k (en px) lo calcula doPrint(): si la receta es tan larga que no cabe en
+     una hoja, baja la escala lo justo para que entre sin dejar una 2.ª hoja vacía. */
+  #printRoot .sheet,#printRoot .sheet *{--fs:clamp(0.5px, min(calc(100vw / 455), var(--rx-k, 99px)), 1.6px);--sp:clamp(0.5px, min(calc(100vw / 455), var(--rx-k, 99px)), 1.8px)}
   #printRoot .sheet{
     box-shadow:none!important;border:0!important;border-radius:0!important;
-    width:100%!important;max-width:none!important;min-height:100vh!important;
+    width:100%!important;max-width:none!important;min-height:100%!important;
     margin:0!important;padding-bottom:calc(var(--sp) * 6)}
   #printRoot .sheet::after{display:none!important}
+  /* si la receta es larga, el separador se encoge en vez de empujar el pie a otra hoja */
+  #printRoot .sheet .spacer{min-height:0!important}
   .sheet .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sheet .pt,.sheet .ind,.sheet .strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sheet .watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -3644,7 +3653,7 @@ function medsDeLista(str){
     return {n:(p.shift()||'').replace(/\./g,' '), c:p.join(' ').replace(/\./g,' ')};
   });
 }
-function renderVerify(){
+function renderVerify(registro){
   const el = $('#verify'); if(!el) return;
   const d = vfData();
   if(!d){ el.classList.remove('on'); document.body.classList.remove('is-verify'); return; }
@@ -3656,10 +3665,18 @@ function renderVerify(){
     : medsDeLista(d.meds).map(m=>({n:m.n, c:m.c, d:''}));
 
   const sinDatos = !d.pres && !d.cmp && !meds.length;
-  const tono = sinDatos ? 'warn' : 'ok';
-  const titulo = sinDatos ? 'Verificación incompleta' : 'Receta verificada';
-  const sub = sinDatos
+  /* registro: true = existe en la base · false = el código NO está registrado
+     (posible QR inventado) · null/undefined = sin base de datos conectada     */
+  const noRegistrada = registro === false;
+  const tono = noRegistrada ? 'bad' : sinDatos ? 'warn' : 'ok';
+  const titulo = noRegistrada ? 'Receta no registrada'
+               : sinDatos ? 'Verificación incompleta' : 'Receta verificada';
+  const sub = noRegistrada
+    ? 'Este código no figura en el registro de recetas de Rx Pro. Puede tratarse de un documento falsificado: pide al médico la receta original o la versión digital.'
+    : sinDatos
     ? 'El enlace no contiene los datos del prescriptor. Pide al médico que comparta el QR original de la receta.'
+    : registro === true
+    ? 'Esta receta figura en el registro de Rx Pro y su huella de integridad coincide.'
     : 'Esta receta fue emitida desde Rx Pro y su código de verificación es válido.';
 
   el.innerHTML = `
@@ -3705,6 +3722,10 @@ function renderVerify(){
       </div>
     </div>
 
+    ${noRegistrada?`<div class="vf-note" style="border-color:rgba(165,32,43,.3);background:#fdecee;color:#8c1f28">
+      <svg style="color:#a5202b"><use href="#i-alert"/></svg>
+      <span><b>El código no está en el registro.</b> Ninguna receta emitida desde Rx Pro con este código existe en la base de datos. No administres el tratamiento sin confirmarlo con el prescriptor.</span></div>`:''}
+
     ${d.hash?`<div class="vf-note"><svg><use href="#i-shield"/></svg>
       <span><b>Huella de integridad:</b> <b class="mono">${esc(d.hash)}</b><br/>
       Esta huella está impresa <b>debajo del código QR</b>, en la esquina inferior derecha de la receta.
@@ -3714,6 +3735,7 @@ function renderVerify(){
     <div class="vf-actions">
       <button class="btn btn-primary" id="vfScan"><svg><use href="#i-qr"/></svg> Ver código QR</button>
     </div>
+    ${registro===true?'':''}
 
     <div class="vf-foot" style="margin-top:18px">
       <div class="derechos" style="font-weight:750">© 2026 isemperadorBR · Todos los derechos reservados</div>
@@ -4005,6 +4027,39 @@ function verifyUrl(r){
   while(parts.length && !parts[parts.length-1]) parts.pop();
   return base + '#v=' + parts.join('/');
 }
+/* ==================== Registro central (Cloudflare D1) ====================
+   Si el sitio está publicado en Cloudflare Pages con la función api/registro,
+   cada receta emitida se anota en la base de datos D1 (solo código, huella, CMP
+   y fecha: nunca el nombre ni el diagnóstico del paciente).  Al verificar, la
+   huella se compara contra el registro, de modo que un QR inventado ya no pasa.
+   Si la función no existe (GitHub Pages, archivo local, sin base configurada)
+   todo sigue funcionando como antes: la app es offline-first.              */
+const DB_API = location.pathname.replace(/[^/]*$/,'') + 'api/registro';
+async function dbRegistrar(rec){
+  try{
+    const r = await fetch(DB_API, {
+      method:'POST', cache:'no-store',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        codigo: rec.code,
+        huella: (rec.hash||'').slice(0,8).toUpperCase(),
+        cmp: nz(ST.user.cmp).replace(/\D/g,'').slice(0,8),
+        fecha: (rec.fecha||'').replace(/-/g,'')
+      })
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+async function dbConsultar(code){
+  try{
+    const r = await fetch(DB_API+'?codigo='+encodeURIComponent(code), {cache:'no-store'});
+    if(!r.ok) return null;                                    // sin función / sin base
+    const ct = r.headers.get('content-type')||'';
+    if(ct.indexOf('application/json') < 0) return null;        // respondió el index.html
+    return await r.json();
+  }catch(e){ return null; }
+}
+
 /* Compatibilidad: enlaces /v/CODIGO también abren la verificación */
 function verifyUrlLegacy(code){ return location.origin + location.pathname + '#v=' + code; }
 
@@ -4074,7 +4129,7 @@ function renderSheet(r, opts){
 
       ${r.indic?`<div class="ind"><b>Indicaciones</b>${esc(r.indic)}</div>`:''}
       ${r.tipo==='controlada'?`<div class="ind" style="border-left-color:#a5202b;color:#7d2a32;background:#fde4e6"><b style="color:#a5202b">Receta controlada</b>Requiere además receta especial numerada según DIGEMID.</div>`:''}
-      <div style="flex:1 1 auto;min-height:calc(var(--sp) * 8)"></div>
+      <div class="spacer"></div>
     </div>
 
     <div class="foot${longName?' stack-sign':''}">
@@ -4122,7 +4177,12 @@ function renderProfilePreview(){ const el=$('#sheetProfilePreview'); if(el){ el.
 function renderSettingsPreview(){ const el=$('#sheetSettingsPreview'); if(el){ el.innerHTML = renderSheet(SAMPLE,{draft:true}); applyScaleAll(); } }
 
 /* ==================== Emitir ==================== */
+let emitBusy = false;
 $('#btnEmit').onclick = async ()=>{
+  if(emitBusy) return;                       // evita el doble toque en el celular
+  emitBusy = true;
+  const btn = $('#btnEmit');
+  if(btn) setTimeout(()=>{ btn.disabled = false; emitBusy = false; }, 1500);
   const r = readForm();
   const errs=[];
   if(!nz(ST.user.nombre)) errs.push('Tu nombre en Mi perfil');
@@ -4130,6 +4190,7 @@ $('#btnEmit').onclick = async ()=>{
   if(!r.paciente.nombre) errs.push('El nombre del paciente');
   if(!r.meds.some(m=>nz(m.nombre))) errs.push('Al menos un medicamento');
   if(errs.length){
+    emitBusy = false;
     toast('bad','Faltan datos', 'Completa: '+errs.join(', ')+'.'); return;
   }
   const seq = ST.recs.length + 1;
@@ -4139,6 +4200,7 @@ $('#btnEmit').onclick = async ()=>{
   const payload = buildPayload(rec);   // ya incluye el hash real
   ST.recs.unshift(rec);
   saveRecs();
+  dbRegistrar(rec);            // anota la receta en D1 (si el sitio lo tiene activo)
   ST.lastEmitted = rec;
   LS.set(dataKey('lastEmit'), rec);
   const b=$('#previewBadge'); if(b){b.textContent='Emitida · '+code;b.className='badge badge-ok';}
@@ -4161,6 +4223,7 @@ $('#btnEmit').onclick = async ()=>{
     </div>
   </div>`);
   $('#mdPdf').onclick = ()=>{ closeModal(); doPrint(rec); };
+  emitBusy = false;
 };
 
 $('#btnClear').onclick = ()=>{
@@ -4192,12 +4255,51 @@ function applyScaleAll(){
 window.addEventListener('resize', ()=>applyScaleAll());
 
 /* ==================== Imprimir / PDF ==================== */
+/* ==================== Que la receta entre en UNA hoja ====================
+   Al imprimir, la hoja mide exactamente una página (100 % de alto).  Si la receta
+   es más larga que eso, el pie se iba a una segunda hoja en blanco.  Aquí se mide
+   la receta, se calcula cuánto hay que reducir y se deja en --rx-k (en px) para
+   que @media print lo aplique.  Nunca baja de 0.72 para que siga siendo legible:
+   pasado ese punto, la receta continúa en una segunda hoja con contenido real. */
+const RX_R = 1.29;            // alto/ancho de la hoja más corta (carta) con margen
+const RX_SHAPE_W = 455;       // = divisor de la fórmula de @media print
+function fitPrintScale(){
+  const root = $('#printRoot'); if(!root) return;
+  const sheet = root.querySelector('.sheet');
+  root.style.removeProperty('--rx-k');
+  if(!sheet) return;
+  let st = document.getElementById('rxMeas');
+  if(!st){
+    st = document.createElement('style'); st.id = 'rxMeas';
+    st.textContent =
+      '#printRoot.rx-meas{display:block!important;position:fixed!important;left:-10000px;top:0;' +
+      'width:455px;height:auto!important;visibility:hidden!important;pointer-events:none}' +
+      '#printRoot.rx-meas .sheet{box-shadow:none!important;border:0!important;border-radius:0!important;' +
+      'width:455px!important;max-width:none!important;min-height:0!important;margin:0!important;padding-bottom:0!important}' +
+      '#printRoot.rx-meas .sheet,#printRoot.rx-meas .sheet *{--fs:1px;--sp:1px}';
+    document.head.appendChild(st);
+  }
+  root.classList.add('rx-meas');
+  const h0 = sheet.getBoundingClientRect().height;
+  root.classList.remove('rx-meas');
+  if(!h0) return;
+  const k = Math.min(1, (RX_SHAPE_W * RX_R) / h0);
+  if(k < 0.995) root.style.setProperty('--rx-k', (RX_SHAPE_W / 455 * k).toFixed(3) + 'px');
+}
+
 function doPrint(rec){
   if(!rec){ toast('wait','Nada que imprimir','Emite la receta primero.'); return; }
   const root = $('#printRoot');
   root.innerHTML = renderSheet(rec,{draft:false});
+  fitPrintScale();
   const sheet = root.querySelector('.sheet');
-  if(sheet) fitSheet(sheet);
+  if(sheet){
+    fitSheet(sheet);
+    // el tamaño inline es el de la vista previa (pantalla); al imprimir manda la
+    // regla @media print, que escala según el papel elegido.
+    sheet.style.removeProperty('--fs'); sheet.style.removeProperty('--sp');
+  }
+
   // esperar a que firma/logo estén decodificados antes de abrir el diálogo
   const imgs = Array.from(root.querySelectorAll('img'));
   const listo = ()=>setTimeout(()=>{ try{window.print();}catch(e){} }, 220);
@@ -4634,8 +4736,15 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
 
   /* Modo verificación: la URL trae #v=… (se llegó escaneando un QR) */
   if(parseVerifyHash()){
-    renderVerify();
+    const code = (parseVerifyHash().split('/')[0]||'').toUpperCase();
+    renderVerify();                       // se pinta de inmediato (offline-first)
     document.title = 'Verificación de receta · Rx Pro';
+    /* Si el sitio tiene base de datos, se confirma contra el registro.
+       Sin base (o sin red) la página se queda como está: verificada por huella. */
+    if(code) dbConsultar(code).then(r=>{
+      if(!r || typeof r.registrada === 'undefined') return;
+      renderVerify(r.registrada ? true : false);
+    });
     return;   // no se abre la app ni se pide cuenta
   }
 
