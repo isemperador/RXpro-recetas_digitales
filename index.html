@@ -1,0 +1,4295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Rx Pro · Recetas Médicas Digitales</title>
+<meta name="description" content="Emisor de recetas médicas digitales con verificación QR, historial, plantillas de dosis y PDF imprimible. Funciona 100% en tu navegador."/>
+<meta name="theme-color" content="#0b3a6f"/>
+<meta name="author" content="isemperadorBR"/>
+<meta name="application-name" content="Rx Pro"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b3a6f'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='34' font-weight='700' fill='%23fff' text-anchor='middle'%3ERx%3C/text%3E%3C/svg%3E"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="og-image.png"/>
+<style>
+/* ============================================================
+   Rx Pro — Recetas Médicas Digitales
+   © 2026 isemperadorBR. Todos los derechos reservados.
+   ============================================================ */
+:root{
+  --bg:#eef2f8; --surface:#ffffff; --surface-2:#f7f9fc; --ink:#0f1e33; --ink-soft:#41546e;
+  --muted:#6b7c94; --line:#dde5ef; --line-strong:#c6d3e3;
+  --primary:#0b3a6f; --primary-600:#0d4a8c; --primary-100:#e3edf9;
+  --ok:#0f7a4d; --ok-100:#e2f6ec; --warn:#9a6200; --warn-100:#fdf1d8;
+  --danger:#a5202b; --danger-100:#fde4e6; --info:#0a5fa8;
+  --rx:#0b3a6f;
+  --r-sm:8px; --r:12px; --r-lg:18px; --r-xl:26px;
+  --shadow-sm:0 1px 2px rgba(16,38,68,.06),0 1px 3px rgba(16,38,68,.08);
+  --shadow:0 4px 6px -1px rgba(16,38,68,.07),0 10px 24px -6px rgba(16,38,68,.12);
+  --shadow-lg:0 18px 40px -12px rgba(16,38,68,.28);
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+  --sidebar:264px;
+}
+html[data-theme="dark"]{
+  --bg:#0a1220; --surface:#101c2e; --surface-2:#152437; --ink:#e8eef7; --ink-soft:#b7c6da;
+  --muted:#8b9cb3; --line:#22334b; --line-strong:#2f4460; --primary-100:#16293f;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow:0 10px 24px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 24px 48px -16px rgba(0,0,0,.7);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);
+  -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5;
+  background-image:radial-gradient(1200px 500px at 100% -10%,rgba(11,58,111,.07),transparent 60%);
+}
+h1,h2,h3,h4,h5{margin:0;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+p{margin:0}
+a{color:var(--primary-600);text-decoration:none}
+button{font-family:inherit}
+input,select,textarea{font-family:inherit;font-size:14px}
+::selection{background:#bcd6f5;color:#06213c}
+:focus-visible{outline:2px solid var(--primary-600);outline-offset:2px;border-radius:4px}
+
+/* ---------- Auth ---------- */
+#auth{position:fixed;inset:0;display:grid;place-items:center;padding:20px;z-index:60;
+  background:
+    radial-gradient(900px 500px at 12% -10%,rgba(11,58,111,.16),transparent 62%),
+    radial-gradient(700px 500px at 100% 110%,rgba(15,122,77,.14),transparent 60%),
+    var(--bg);
+  overflow:auto}
+#auth.hidden{display:none}
+.auth-card{width:100%;max-width:432px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:32px 28px 22px;position:relative;overflow:hidden}
+.auth-card::before{content:"";position:absolute;inset:0 0 auto;height:5px;background:linear-gradient(90deg,var(--primary),#1d7fd4 45%,#0f7a4d)}
+.auth-brand{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin-bottom:20px}
+.logo-badge{width:64px;height:64px;border-radius:19px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(150deg,#0b3a6f,#1558a4 70%,#1d7fd4);box-shadow:0 10px 22px -8px rgba(11,58,111,.7);
+  font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-1px}
+.auth-brand h1{font-size:23px}
+.auth-brand p{color:var(--muted);font-size:13px;max-width:32ch}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:999px;padding:4px;margin-bottom:18px}
+.auth-tabs button{border:0;background:transparent;padding:9px 10px;border-radius:999px;font-weight:650;font-size:13.5px;color:var(--muted);cursor:pointer;transition:.18s}
+.auth-tabs button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+
+/* ---------- Forms ---------- */
+.field{margin-bottom:13px}
+.field>label,.lbl{display:block;font-size:12.5px;font-weight:650;color:var(--ink-soft);margin-bottom:5px;letter-spacing:.01em}
+.lbl .opt{font-weight:500;color:var(--muted);font-size:11.5px}
+.control{width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:var(--r-sm);
+  background:var(--surface);color:var(--ink);transition:border-color .15s,box-shadow .15s;min-height:40px}
+.control:hover{border-color:#a9bdd6}
+.control:focus{outline:0;border-color:var(--primary-600);box-shadow:0 0 0 3px rgba(13,74,140,.14)}
+.control::placeholder{color:#9aa9bd}
+textarea.control{resize:vertical;min-height:64px;line-height:1.45}
+select.control{appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7c94' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:32px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 12px}
+@media(max-width:640px){.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.err{font-size:11.5px;color:var(--danger);margin-top:4px;display:none}
+.field.bad .control{border-color:var(--danger);background:var(--danger-100)}
+.field.bad .err{display:block}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;
+  border-radius:var(--r-sm);padding:9px 15px;font-size:14px;font-weight:650;cursor:pointer;
+  transition:transform .12s,box-shadow .15s,background .15s,color .15s;white-space:nowrap;min-height:40px}
+.btn:active{transform:scale(.985)}
+.btn svg{width:16px;height:16px;flex:none}
+.btn-primary{background:linear-gradient(180deg,var(--primary-600),var(--primary));color:#fff;box-shadow:0 6px 14px -6px rgba(11,58,111,.75)}
+.btn-primary:hover{background:linear-gradient(180deg,#10549e,#0a3364)}
+.btn-ghost{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
+.btn-ghost:hover{background:var(--surface-2);border-color:#a9bdd6}
+.btn-soft{background:var(--primary-100);color:var(--primary);border-color:transparent}
+.btn-soft:hover{background:#d3e3f7}
+.btn-ok{background:var(--ok-100);color:var(--ok);border-color:transparent}
+.btn-ok:hover{background:#cdeede}
+.btn-danger{background:var(--danger-100);color:var(--danger);border-color:transparent}
+.btn-danger:hover{background:#fbd2d6}
+.btn-sm{padding:6px 11px;font-size:12.5px;min-height:32px;border-radius:7px}
+.btn-lg{padding:12px 20px;font-size:15px;min-height:46px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-icon{padding:8px;min-height:auto;border-radius:9px}
+.link-btn{background:none;border:0;color:var(--primary-600);font-weight:600;font-size:12.5px;cursor:pointer;padding:0;font-family:inherit}
+
+/* ---------- App shell ---------- */
+#app{display:none;min-height:100vh}
+#app.on{display:block}
+.shell{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100vh}
+@media(max-width:960px){.shell{grid-template-columns:1fr}}
+
+.sidebar{background:linear-gradient(180deg,#0b3a6f,#08294f 60%,#061f3d);color:#dbe7f6;
+  display:flex;flex-direction:column;padding:20px 14px;position:sticky;top:0;height:100vh;z-index:30}
+.sidebar .brand{display:flex;align-items:center;gap:11px;padding:2px 8px 18px}
+.sidebar .brand .logo-badge{width:42px;height:42px;border-radius:13px;font-size:21px;box-shadow:0 8px 18px -8px rgba(0,0,0,.6)}
+.sidebar .brand-txt strong{display:block;font-size:15.5px;color:#fff;letter-spacing:-.02em}
+.sidebar .brand-txt span{font-size:10.5px;color:#8fb2d8;letter-spacing:.09em;text-transform:uppercase;font-weight:700}
+.nav{display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto}
+.nav-btn{display:flex;align-items:center;gap:11px;background:transparent;border:0;color:#b9cee6;
+  padding:10px 12px;border-radius:10px;font-size:13.8px;font-weight:600;cursor:pointer;text-align:left;
+  transition:.16s;position:relative}
+.nav-btn svg{width:18px;height:18px;opacity:.85;flex:none}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-btn.on{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.13)}
+.nav-btn.on::after{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:#57b0ff}
+.nav-btn .pill{margin-left:auto;background:rgba(87,176,255,.22);color:#cfe6ff;font-size:10.5px;font-weight:800;
+  padding:1px 7px;border-radius:999px;letter-spacing:.02em}
+.sidebar-foot{border-top:1px solid rgba(255,255,255,.13);padding-top:12px;margin-top:10px;font-size:10.8px;color:#8fb2d8;line-height:1.5;text-align:center}
+.sidebar-foot b{color:#d8e8fa;font-weight:700}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 22px;background:color-mix(in srgb,var(--surface) 92%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.topbar h2{font-size:17px}
+.topbar .sub{font-size:12px;color:var(--muted);font-weight:500}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-100);color:var(--primary);
+  display:grid;place-items:center;font-weight:800;font-size:13.5px;border:1px solid var(--line);flex:none}
+.who{line-height:1.15;min-width:0}
+.who strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.who span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:190px}
+@media(max-width:700px){.who{display:none}}
+
+.content{padding:22px;max-width:1400px;width:100%;margin:0 auto;flex:1}
+.view{display:none}
+.view.on{display:block;animation:fade .22s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+.mobile-tabs{display:none}
+@media(max-width:960px){
+  .sidebar{display:none}
+  .mobile-tabs{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;background:color-mix(in srgb,var(--surface) 95%,transparent);
+    backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
+  .mobile-tabs button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+    font-size:10px;font-weight:700;color:var(--muted);padding:6px 2px;border-radius:9px;cursor:pointer}
+  .mobile-tabs button svg{width:20px;height:20px}
+  .mobile-tabs button.on{color:var(--primary);background:var(--primary-100)}
+  .content{padding:16px 14px 92px}
+  .topbar{padding:12px 14px}
+}
+
+/* ---------- Cards / layout pieces ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-sm)}
+.card-pad{padding:18px}
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card-head h3{font-size:14.5px}
+.card-head .btn{margin-left:auto}
+.card-body{padding:18px}
+.section-step{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--primary);margin:0 0 12px}
+.section-step .n{width:21px;height:21px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:11px;letter-spacing:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:20px;align-items:start}
+@media(max-width:1180px){.split{grid-template-columns:1fr}}
+.sticky-preview{position:sticky;top:78px}
+@media(max-width:1180px){.sticky-preview{position:static}}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:750;padding:3px 9px;border-radius:999px;letter-spacing:.01em}
+.badge-ok{background:var(--ok-100);color:var(--ok)}
+.badge-warn{background:var(--warn-100);color:var(--warn)}
+.badge-danger{background:var(--danger-100);color:var(--danger)}
+.badge-soft{background:var(--primary-100);color:var(--primary)}
+.badge-line{background:transparent;border:1px solid var(--line-strong);color:var(--muted)}
+
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty .ico{width:60px;height:60px;margin:0 auto 14px;border-radius:18px;background:var(--surface-2);border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--line-strong)}
+.empty .ico svg{width:28px;height:28px}
+.empty h4{color:var(--ink);font-size:15px;margin-bottom:5px}
+.empty p{font-size:13px;max-width:38ch;margin:0 auto}
+
+/* ---------- Chips de dosis / formas ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--surface-2);border:1px solid var(--line);color:var(--ink-soft);border-radius:999px;
+  padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--primary-600);color:var(--primary);background:var(--primary-100)}
+.chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ---------- Filas de medicamentos ---------- */
+.med-row{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--surface-2);position:relative;margin-bottom:10px}
+.med-row .med-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.med-row .med-top .idx{width:24px;height:24px;border-radius:7px;background:var(--primary);color:#fff;display:grid;place-items:center;
+  font-size:12px;font-weight:800;flex:none}
+.med-row .del{margin-left:auto;background:none;border:0;color:var(--muted);cursor:pointer;padding:4px;border-radius:6px;line-height:0}
+.med-row .del:hover{color:var(--danger);background:var(--danger-100)}
+.med-row .del svg{width:16px;height:16px}
+.med-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:0 10px}
+.med-grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
+@media(max-width:720px){.med-grid,.med-grid2{grid-template-columns:1fr 1fr}.med-grid>*:first-child{grid-column:1/-1}}
+.med-row .field{margin-bottom:9px}
+
+/* ---------- Historial ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.search{position:relative;flex:1;min-width:210px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.search input{padding-left:34px}
+.rec-list{display:flex;flex-direction:column;gap:10px}
+.rec-item{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow-sm);transition:.15s}
+.rec-item:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
+.rec-item .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;
+  background:var(--primary-100);color:var(--primary);padding:6px 9px;border-radius:8px;white-space:nowrap}
+.rec-item h4{font-size:14px;margin-bottom:2px}
+.rec-item .meta{font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rec-item .acts{display:flex;gap:6px}
+@media(max-width:720px){
+  .rec-item{grid-template-columns:1fr;gap:9px}
+  .rec-item .acts{justify-content:flex-start;flex-wrap:wrap}
+}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:820px){.stat-grid{grid-template-columns:1fr 1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow-sm)}
+.stat .k{font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:3px;color:var(--primary)}
+.stat .s{font-size:11.5px;color:var(--muted)}
+
+/* ---------- Ajustes: swatches ---------- */
+.swatches{display:flex;gap:9px;flex-wrap:wrap}
+.swatch{width:34px;height:34px;border-radius:10px;border:2px solid transparent;cursor:pointer;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.swatch.on{border-color:var(--ink);transform:scale(1.06)}
+.swatch.on::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.switch{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.switch:last-child{border-bottom:0}
+.switch .txt{flex:1}
+.switch .txt strong{display:block;font-size:13.5px}
+.switch .txt span{font-size:11.8px;color:var(--muted)}
+.toggle{position:relative;width:44px;height:25px;border-radius:999px;background:var(--line-strong);border:0;cursor:pointer;flex:none;transition:.18s}
+.toggle::after{content:"";position:absolute;top:2.5px;left:2.5px;width:20px;height:20px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.18s}
+.toggle.on{background:var(--ok)}
+.toggle.on::after{transform:translateX(19px)}
+
+/* ---------- Uploads /firma ---------- */
+.upload{border:2px dashed var(--line-strong);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;
+  transition:.15s;background:var(--surface-2)}
+.upload:hover{border-color:var(--primary-600);background:var(--primary-100)}
+.upload svg{width:22px;height:22px;color:var(--muted);margin-bottom:6px}
+.upload p{font-size:12.5px;font-weight:650;color:var(--ink-soft)}
+.upload span{font-size:11px;color:var(--muted)}
+.upload.has{padding:8px;border-style:solid;border-color:var(--ok)}
+.upload img{max-height:70px;max-width:100%;object-fit:contain;display:block;margin:0 auto}
+#sigPad{width:100%;height:120px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:#fff;touch-action:none;cursor:crosshair;display:block}
+
+/* ============================================================
+   HOJA DE RECETA (pantalla + impresión)
+   ============================================================ */
+.sheet-wrap{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;
+  display:grid;place-items:center;overflow:auto}
+.sheet{
+  width:100%;max-width:430px;background:#fff;color:#12233b;border-radius:6px;overflow:hidden;
+  box-shadow:0 12px 30px -12px rgba(16,38,68,.35);border:1px solid #e6ecf4;
+  font-family:var(--font);position:relative;display:flex;flex-direction:column;min-height:600px}
+.sheet .band{background:var(--rx);color:#fff;padding:14px 16px 12px;display:flex;gap:12px;align-items:center;position:relative;overflow:hidden}
+.sheet .band::after{content:"";position:absolute;right:-30px;top:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.07)}
+.sheet .band .logo{width:52px;height:52px;border-radius:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  display:grid;place-items:center;flex:none;overflow:hidden;font-family:var(--serif);font-size:22px;font-weight:700}
+.sheet .band .logo img{width:100%;height:100%;object-fit:contain;background:#fff}
+.sheet .band .who-rx{min-width:0;flex:1}
+.sheet .band h3{font-size:14.5px;line-height:1.2;color:#fff;letter-spacing:-.01em}
+.sheet .band .spec{font-size:11px;opacity:.9;margin-top:2px}
+.sheet .band .doc{font-size:10.5px;opacity:.85;margin-top:3px;line-height:1.35}
+.sheet .band .rxsym{font-family:var(--serif);font-size:30px;font-weight:700;opacity:.55;line-height:1;margin-left:auto;flex:none}
+.sheet .body{padding:13px 16px;flex:1;display:flex;flex-direction:column;gap:9px}
+.sheet .pt{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;background:#f5f8fc;border:1px solid #e4ebf4;
+  border-radius:7px;padding:9px 10px;font-size:11px}
+.sheet .pt .f{display:flex;gap:4px;min-width:0}
+.sheet .pt .f b{color:#5b6f88;font-weight:700;flex:none}
+.sheet .pt .f span{color:#12233b;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .pt .full{grid-column:1/-1}
+.sheet .dx{font-size:11px;color:#12233b}
+.sheet .dx b{color:#5b6f88;font-weight:700}
+.sheet .rxline{display:flex;align-items:center;gap:6px;font-family:var(--serif);font-size:19px;font-weight:700;color:var(--rx);border-bottom:1.5px solid var(--rx);padding-bottom:3px}
+.sheet .rxline small{font-family:var(--font);font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7b8ea6;margin-left:auto}
+.sheet .meds{display:flex;flex-direction:column;gap:7px;flex:1}
+.sheet .m{font-size:11px;padding-bottom:6px;border-bottom:1px dotted #dbe3ee}
+.sheet .m:last-child{border-bottom:0}
+.sheet .m .n{display:flex;gap:6px;align-items:baseline}
+.sheet .m .n .num{font-weight:800;color:var(--rx);font-size:10px;flex:none}
+.sheet .m .n strong{font-size:11.8px;letter-spacing:.005em}
+.sheet .m .n .conc{color:#43566e;font-weight:600}
+.sheet .m .d{color:#43566e;font-size:10.7px;margin-top:2px;line-height:1.45;padding-left:15px}
+.sheet .m .d b{color:#12233b}
+.sheet .ind{background:#f5f8fc;border-left:3px solid var(--rx);border-radius:0 5px 5px 0;padding:6px 9px;font-size:10.6px;color:#33475f;line-height:1.45}
+.sheet .ind b{color:#12233b;display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7b8ea6;margin-bottom:2px}
+.sheet .foot{display:flex;gap:12px;align-items:flex-end;padding:0 16px 11px;margin-top:auto}
+.sheet .sign{flex:1;text-align:center;min-width:0}
+.sheet .sign .line{border-top:1.5px solid #93a5bb;margin:0 auto 4px;width:100%;max-width:185px;position:relative;height:46px;display:flex;align-items:flex-end;justify-content:center}
+.sheet .sign .line img{max-height:52px;max-width:100%;object-fit:contain;position:absolute;bottom:1px;left:50%;transform:translateX(-50%)}
+.sheet .sign .nm{font-size:10.5px;font-weight:800;color:#12233b;line-height:1.25}
+.sheet .sign .cm{font-size:9.5px;color:#5b6f88;line-height:1.35}
+.sheet .qr{flex:none;text-align:center}
+.sheet .qr svg{display:block;width:72px;height:72px;border:1px solid #e4ebf4;border-radius:5px;padding:3px;background:#fff}
+.sheet .qr .cd{font-family:ui-monospace,Menlo,monospace;font-size:7.6px;font-weight:800;color:#12233b;margin-top:3px;letter-spacing:.02em}
+.sheet .strip{background:#f0f4fa;border-top:1px solid #e4ebf4;padding:5px 16px;display:flex;justify-content:space-between;gap:8px;
+  font-size:7.6px;color:#7b8ea6;line-height:1.3}
+.sheet .strip .cpy{font-weight:800;color:#43566e;white-space:nowrap}
+.sheet .watermark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:5}
+.sheet .watermark span{font-size:52px;font-weight:900;color:rgba(165,32,43,.14);transform:rotate(-28deg);
+  border:5px solid rgba(165,32,43,.14);padding:8px 26px;border-radius:14px;letter-spacing:.1em}
+.sheet .num-idx{position:absolute;right:12px;bottom:34px;font-size:7px;color:#b6c2d1}
+
+.preview-note{display:flex;gap:9px;align-items:flex-start;background:var(--warn-100);border:1px solid #f0dcae;
+  border-radius:10px;padding:10px 12px;font-size:11.8px;color:#6d4a00;margin-top:12px;line-height:1.45}
+.preview-note svg{width:15px;height:15px;flex:none;margin-top:1px}
+
+/* ---------- Avisos ---------- */
+.notice{display:flex;gap:11px;padding:13px 15px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);margin-bottom:10px}
+.notice .nic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;background:var(--primary-100);color:var(--primary)}
+.notice .nic svg{width:16px;height:16px}
+.notice h5{font-size:13px;margin-bottom:2px}
+.notice p{font-size:12px;color:var(--muted);line-height:1.5}
+.notice .when{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:650}
+
+/* ---------- Modal / toasts ---------- */
+#modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:18px;background:rgba(9,22,38,.55);backdrop-filter:blur(3px)}
+#modal.on{display:grid}
+.modal-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:100%;max-width:430px;
+  padding:22px;border:1px solid var(--line);animation:pop .18s ease}
+.modal-card.wide{max-width:760px;padding:0;overflow:hidden}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:none}}
+.modal-card h3{font-size:16px;margin-bottom:7px}
+.modal-card p{font-size:13px;color:var(--ink-soft);line-height:1.55}
+.modal-acts{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
+.modal-card .sheet{min-height:0}
+@media(max-width:540px){
+  .modal-acts{display:grid;grid-template-columns:1fr 1fr}
+  .modal-acts .btn,.modal-foot .btn{width:100%}
+  .modal-foot{display:grid;grid-template-columns:1fr 1fr;padding:10px 12px}
+  .modal-card{padding:18px}
+  .modal-card.wide{padding:0}
+}
+
+#toasts{position:fixed;bottom:20px;right:20px;z-index:90;display:flex;flex-direction:column;gap:9px;max-width:min(360px,92vw)}
+@media(max-width:960px){#toasts{bottom:88px;left:12px;right:12px;max-width:none}}
+.toast{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-left:4px solid var(--primary);border-radius:11px;padding:11px 13px;box-shadow:var(--shadow-lg);animation:slide .25s ease;font-size:13px}
+.toast.ok{border-left-color:var(--ok)}.toast.wait{border-left-color:var(--warn)}.toast.bad{border-left-color:var(--danger)}
+.toast .tic{flex:none;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;background:var(--primary-100);color:var(--primary);font-size:11px;font-weight:900}
+.toast.ok .tic{background:var(--ok-100);color:var(--ok)}
+.toast.wait .tic{background:var(--warn-100);color:var(--warn)}
+.toast.bad .tic{background:var(--danger-100);color:var(--danger)}
+.toast strong{display:block;font-size:12.8px}
+.toast span{font-size:11.8px;color:var(--muted);line-height:1.45}
+@keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+
+/* ---------- Footer ---------- */
+.site-footer{padding:16px 22px 22px;text-align:center;font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line);margin-top:auto}
+.site-footer .derechos{font-weight:750;color:var(--ink-soft);letter-spacing:.01em}
+.site-footer .derechos b{color:var(--primary);font-weight:800}
+.site-footer a{color:var(--primary-600);font-weight:650}
+@media(max-width:960px){.site-footer{padding-bottom:96px}}
+
+/* ---------- FAB vista previa móvil ---------- */
+#fabPreview{position:fixed;right:16px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:45;display:none;
+  align-items:center;gap:7px;background:linear-gradient(180deg,var(--primary-600),var(--primary));color:#fff;
+  border:0;border-radius:999px;padding:12px 17px;font-size:13.5px;font-weight:700;cursor:pointer;
+  box-shadow:0 12px 26px -10px rgba(11,58,111,.85),0 2px 6px rgba(0,0,0,.18)}
+#fabPreview svg{width:17px;height:17px}
+@media(max-width:1180px){#fabPreview{display:inline-flex}}
+@media(min-width:961px){#fabPreview{bottom:22px}}
+
+/* ---------- Verificación (modal QR) ---------- */
+.verify-box{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:14px;font-size:12.5px;line-height:1.6}
+.verify-box .kv{display:grid;grid-template-columns:120px 1fr;gap:4px 10px}
+.verify-box .kv b{color:var(--muted);font-weight:700;font-size:11.5px;padding-top:2px}
+.kv-list{display:grid;grid-template-columns:1fr;gap:3px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.mut{color:var(--muted)}
+.small{font-size:11.5px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mb10{margin-bottom:10px}.mb16{margin-bottom:16px}
+.nowrap{white-space:nowrap}
+
+/* ============================================================
+   IMPRESIÓN
+   ============================================================ */
+#printRoot{display:none}
+@media print{
+  html,body{background:#fff!important;margin:0!important;padding:0!important}
+  #app,#auth,#toasts,#modal,.mobile-tabs,.no-print{display:none!important}
+  #printRoot{display:block!important}
+  #printRoot .sheet{box-shadow:none!important;border:0!important;border-radius:0!important;max-width:none!important;width:100%!important;min-height:0!important}
+  .sheet .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sheet .pt,.sheet .ind,.sheet .strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sheet .watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== SPRITE DE ICONOS ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-steth" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2v2M5 2v2M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.1 12.3a1 1 0 0 1 0-.7 10.8 10.8 0 0 1 19.8 0 1 1 0 0 1 0 .7 10.8 10.8 0 0 1-19.8 0"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14h1M14 20h3M20 17v4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+    <symbol id="i-pill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5-7-7a4.9 4.9 0 0 1 7-7l7 7a4.9 4.9 0 0 1-7 7z"/><path d="m8.5 8.5 7 7"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+  </defs>
+</svg>
+
+<!-- ===================== AUTENTICACIÓN ===================== -->
+<section id="auth">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="logo-badge">Rx</div>
+      <h1 id="authTitle">Recetas Digitales <span style="font-size:13px;font-weight:600;color:var(--muted)">· Rx Pro</span></h1>
+      <p id="authSub">Emite recetas profesionales con verificación QR en segundos</p>
+    </div>
+
+    <div class="auth-tabs" role="tablist">
+      <button id="tabLogin" class="on" type="button">Iniciar sesión</button>
+      <button id="tabSignup" type="button">Crear cuenta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form id="formLogin" autocomplete="on">
+      <div class="field" id="fLoginEmail">
+        <label for="lgEmail">Correo electrónico</label>
+        <input class="control" type="email" id="lgEmail" placeholder="doctor@ejemplo.com" autocomplete="username" required/>
+        <div class="err">Ingresa un correo válido.</div>
+      </div>
+      <div class="field" id="fLoginPass">
+        <label for="lgPass">Contraseña</label>
+        <input class="control" type="password" id="lgPass" placeholder="••••••••" autocomplete="current-password" required/>
+        <div class="err">La contraseña debe tener al menos 6 caracteres.</div>
+      </div>
+      <div class="row" style="justify-content:space-between;margin:-4px 0 14px">
+        <label class="row" style="gap:6px;font-size:12px;color:var(--muted);cursor:pointer">
+          <input type="checkbox" id="lgRemember" checked style="accent-color:var(--primary)"/> Recordarme
+        </label>
+        <button type="button" class="link-btn" id="btnForgot">¿Olvidaste tu contraseña?</button>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Iniciar sesión</button>
+      <p class="hint" style="text-align:center;margin-top:12px">
+        ¿No tienes cuenta? <button type="button" class="link-btn" data-go-signup>Regístrate gratis</button>
+      </p>
+    </form>
+
+    <!-- REGISTRO -->
+    <form id="formSignup" style="display:none" autocomplete="on">
+      <div class="field" id="fSName">
+        <label for="suName">Nombre completo <span class="opt">(como aparece en tu sello)</span></label>
+        <input class="control" id="suName" placeholder="Dr. Juan Pérez Gonzáles" autocomplete="name" required/>
+        <div class="err">Escribe tu nombre completo.</div>
+      </div>
+      <div class="field" id="fSEmail">
+        <label for="suEmail">Correo electrónico</label>
+        <input class="control" type="email" id="suEmail" placeholder="doctor@ejemplo.com" autocomplete="email" required/>
+        <div class="err">Ingresa un correo válido.</div>
+      </div>
+      <div class="grid2">
+        <div class="field" id="fSPass">
+          <label for="suPass">Contraseña</label>
+          <input class="control" type="password" id="suPass" placeholder="Mín. 8 caracteres" autocomplete="new-password" required/>
+          <div class="err">Usa al menos 8 caracteres.</div>
+        </div>
+        <div class="field" id="fSPass2">
+          <label for="suPass2">Repetir contraseña</label>
+          <input class="control" type="password" id="suPass2" placeholder="••••••••" autocomplete="new-password" required/>
+          <div class="err">Las contraseñas no coinciden.</div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field" id="fSCmp">
+          <label for="suCmp">CMP <span class="opt">(colegiatura)</span></label>
+          <input class="control" id="suCmp" placeholder="012345" inputmode="numeric" required/>
+          <div class="err">Ingresa tu número de CMP.</div>
+        </div>
+        <div class="field">
+          <label for="suSpec">Especialidad</label>
+          <input class="control" id="suSpec" placeholder="Medicina General" list="dlSpec"/>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="suPhone">Teléfono consultorio <span class="opt">(opcional)</span></label>
+          <input class="control" id="suPhone" placeholder="(01) 555-1234"/></div>
+        <div class="field"><label for="suRne">RNE <span class="opt">(opcional)</span></label>
+          <input class="control" id="suRne" placeholder="Si atiendes en IPRESS"/></div>
+      </div>
+      <div class="field"><label for="suAddr">Dirección del consultorio <span class="opt">(opcional, aparece en la receta)</span></label>
+        <input class="control" id="suAddr" placeholder="Av. Ejemplo 123, Lima"/></div>
+      <label class="row" style="gap:8px;font-size:11.8px;color:var(--ink-soft);margin:2px 0 14px;align-items:flex-start;cursor:pointer">
+        <input type="checkbox" id="suTerms" style="margin-top:2px;accent-color:var(--primary)"/>
+        <span>Entiendo que esta herramienta <b>no sustituye</b> la firma digital certificada (Ley 27269) y que soy responsable del contenido clínico y legal de mis recetas.</span>
+      </label>
+      <div class="err" id="suTermsErr" style="margin:-8px 0 10px">Debes aceptar la condición anterior.</div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Crear mi cuenta</button>
+      <p class="hint" style="text-align:center;margin-top:12px">
+        ¿Ya tienes cuenta? <button type="button" class="link-btn" data-go-login>Inicia sesión</button>
+      </p>
+    </form>
+
+    <div class="site-footer" style="border:0;padding:18px 0 0;margin-top:14px">
+      <div class="derechos">© 2026 isemperadorBR · Todos los derechos reservados</div>
+    </div>
+  </div>
+  <datalist id="dlSpec">
+    <option>Medicina General</option><option>Medicina Interna</option><option>Pediatría</option>
+    <option>Ginecología y Obstetricia</option><option>Cirugía General</option><option>Cardiología</option>
+    <option>Dermatología</option><option>Endocrinología</option><option>Gastroenterología</option>
+    <option>Neurología</option><option>Psiquiatría</option><option>Traumatología</option>
+    <option>Oftalmología</option><option>Otorrinolaringología</option><option>Urología</option>
+    <option>Neumología</option><option>Reumatología</option><option>Nefrología</option>
+    <option>Odontología</option><option>Emergencias</option>
+  </datalist>
+</section>
+
+<!-- ===================== APLICACIÓN ===================== -->
+<div id="app">
+  <div class="shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar no-print">
+      <div class="brand">
+        <div class="logo-badge">Rx</div>
+        <div class="brand-txt"><strong>Rx Pro</strong><span>Recetas Digitales</span></div>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn on" data-view="nueva"><svg><use href="#i-plus"/></svg> Nueva receta</button>
+        <button class="nav-btn" data-view="historial"><svg><use href="#i-list"/></svg> Historial <span class="pill" id="navCount">0</span></button>
+        <button class="nav-btn" data-view="perfil"><svg><use href="#i-user"/></svg> Mi perfil</button>
+        <button class="nav-btn" data-view="ajustes"><svg><use href="#i-cog"/></svg> Ajustes</button>
+        <button class="nav-btn" data-view="avisos"><svg><use href="#i-bell"/></svg> Avisos</button>
+        <button class="nav-btn" data-view="ayuda"><svg><use href="#i-help"/></svg> Ayuda legal</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div><b>© 2026 isemperadorBR</b></div>
+        <div>Todos los derechos reservados</div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <!-- TOPBAR -->
+      <header class="topbar no-print">
+        <div>
+          <h2 id="viewTitle">Nueva receta</h2>
+          <div class="sub" id="viewSub">Completa los datos y descarga tu receta</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost btn-icon" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema"><svg><use href="#i-moon"/></svg></button>
+          <button class="btn btn-ghost btn-icon" id="btnLogout" title="Cerrar sesión" aria-label="Cerrar sesión"><svg><use href="#i-out"/></svg></button>
+          <div class="avatar" id="avatarIni">--</div>
+          <div class="who"><strong id="whoName">—</strong><span id="whoSpec">—</span></div>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- ============ VISTA: NUEVA RECETA ============ -->
+        <section class="view on" id="view-nueva">
+          <div class="split">
+            <!-- FORM -->
+            <div class="stack">
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">1</span> Datos del paciente</div>
+                <div class="field"><label for="pNombre">Nombre y apellidos del paciente</label>
+                  <input class="control" id="pNombre" placeholder="Ej. María Elena Quispe Rojas" autocomplete="off"/></div>
+                <div class="grid3">
+                  <div class="field"><label for="pEdad">Edad</label><input class="control" id="pEdad" placeholder="34" inputmode="numeric"/></div>
+                  <div class="field"><label for="pSexo">Sexo</label>
+                    <select class="control" id="pSexo"><option value="">—</option><option>F</option><option>M</option><option>Otro</option></select></div>
+                  <div class="field"><label for="pDoc">DNI / documento <span class="opt">(opc.)</span></label><input class="control" id="pDoc" placeholder="12345678" inputmode="numeric"/></div>
+                </div>
+                <div class="grid2">
+                  <div class="field"><label for="pFecha">Fecha de emisión</label><input class="control" type="date" id="pFecha"/></div>
+                  <div class="field"><label for="pDx">Diagnóstico <span class="opt">(opcional · dato sensible)</span></label>
+                    <input class="control" id="pDx" placeholder="Ej. Faringitis aguda (J02.9)"/>
+                  </div>
+                </div>
+                <div class="field" style="margin-bottom:0"><label for="pAlerg">Alergias conocidas <span class="opt">(opcional)</span></label>
+                  <input class="control" id="pAlerg" placeholder="Ej. Penicilina"/></div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">2</span> Medicamentos</div>
+                <div id="medsList"></div>
+                <div class="row">
+                  <button class="btn btn-soft btn-sm" id="btnAddMed" type="button"><svg><use href="#i-plus"/></svg> Agregar medicamento</button>
+                  <button class="btn btn-ghost btn-sm" id="btnUseTemplate" type="button"><svg><use href="#i-pill"/></svg> Plantillas de dosis</button>
+                </div>
+                <p class="hint" style="margin-top:10px">💡 Usa siempre el <b>nombre genérico (DCI)</b> y agrega la concentración: es lo que exige la normativa DIGEMID.</p>
+              </div>
+
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">3</span> Indicaciones generales</div>
+                <div class="field" style="margin-bottom:0">
+                  <textarea class="control" id="pIndic" rows="3" placeholder="Ej. Reposo relativo 48 h, abundantes líquidos, control en 7 días o antes si empeora."></textarea>
+                </div>
+                <div class="row mt12" style="gap:6px">
+                  <span class="small mut">Sugerencias:</span>
+                  <button class="chip" type="button" data-indic="Reposo relativo por 48 horas. Abundantes líquidos. Control en 7 días o antes si empeora.">Reposo 48 h</button>
+                  <button class="chip" type="button" data-indic="Acudir a emergencia si presenta dificultad respiratoria, fiebre persistente mayor a 39 °C o desmayo.">Signos de alarma</button>
+                  <button class="chip" type="button" data-indic="Tomar el medicamento con alimentos. No suspender el tratamiento antes de completarlo.">Con alimentos</button>
+                </div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">4</span> Tipo de receta</div>
+                <div class="chips">
+                  <button class="chip on" type="button" data-tipo="simple">Receta simple</button>
+                  <button class="chip" type="button" data-tipo="controlada">Controlada / psicotrópico</button>
+                </div>
+                <div id="ctrlWarn" style="display:none" class="mt12">
+                  <div class="notice" style="border-color:#efc9cd;background:var(--danger-100);margin:0">
+                    <div class="nic" style="background:#f8cfd3;color:var(--danger)"><svg><use href="#i-alert"/></svg></div>
+                    <div><h5 style="color:var(--danger)">Medicamento controlado</h5>
+                      <p style="color:#7d2a32">Los psicotrópicos y estupefacientes requieren <b>receta especial numerada</b> según DIGEMID. Este documento no reemplaza ese formato: úsalo solo como constancia complementaria.</p></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row" style="gap:9px">
+                <button class="btn btn-primary btn-lg" id="btnEmit" type="button"><svg><use href="#i-check"/></svg> Emitir y guardar receta</button>
+                <button class="btn btn-ghost btn-lg" id="btnClear" type="button">Limpiar</button>
+              </div>
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="stack sticky-preview">
+              <div class="card">
+                <div class="card-head"><h3>Vista previa en vivo</h3><span class="badge badge-soft" id="previewBadge">Borrador</span></div>
+                <div class="card-body" style="padding:12px">
+                  <div class="sheet-wrap" style="padding:10px"><div id="sheetPreview"></div></div>
+                  <div class="row mt12" style="gap:7px">
+                    <button class="btn btn-ghost btn-sm" id="btnPreviewPdf" type="button"><svg><use href="#i-down"/></svg> PDF / Imprimir</button>
+                    <button class="btn btn-ghost btn-sm" id="btnPreviewShare" type="button"><svg><use href="#i-share"/></svg> WhatsApp</button>
+                    <button class="btn btn-ghost btn-sm" id="btnPreviewQr" type="button"><svg><use href="#i-qr"/></svg> Ver QR</button>
+                  </div>
+                  <div class="preview-note">
+                    <svg><use href="#i-info"/></svg>
+                    <div>El código de verificación y el QR se generan al <b>emitir</b> la receta. Antes de eso, la vista previa es un borrador sin validez.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: HISTORIAL ============ -->
+        <section class="view" id="view-historial">
+          <div class="stat-grid">
+            <div class="stat"><div class="k">Recetas emitidas</div><div class="v" id="stTotal">0</div><div class="s">Total histórico</div></div>
+            <div class="stat"><div class="k">Este mes</div><div class="v" id="stMes">0</div><div class="s" id="stMesLabel">—</div></div>
+            <div class="stat"><div class="k">Pacientes</div><div class="v" id="stPac">0</div><div class="s">Únicos registrados</div></div>
+            <div class="stat"><div class="k">Medicamentos</div><div class="v" id="stMeds">0</div><div class="s">Prescripciones totales</div></div>
+          </div>
+          <div class="toolbar">
+            <div class="search">
+              <svg><use href="#i-search"/></svg>
+              <input class="control" id="hSearch" placeholder="Buscar por paciente, código, medicamento o diagnóstico…"/>
+            </div>
+            <select class="control" id="hSort" style="max-width:200px">
+              <option value="fecha-desc">Más recientes primero</option>
+              <option value="fecha-asc">Más antiguas primero</option>
+              <option value="paciente">Paciente (A–Z)</option>
+            </select>
+            <button class="btn btn-ghost" id="btnExportJson"><svg><use href="#i-down"/></svg> Respaldar</button>
+          </div>
+          <div class="rec-list" id="recList"></div>
+          <div id="histEmpty" class="empty" style="display:none">
+            <div class="ico"><svg><use href="#i-list"/></svg></div>
+            <h4>Aún no hay recetas</h4>
+            <p>Cuando emitas tu primera receta aparecerá aquí, con su código de verificación y acceso al PDF.</p>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: PERFIL ============ -->
+        <section class="view" id="view-perfil">
+          <div class="split">
+            <div class="stack">
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">1</span> Datos profesionales</div>
+                <div class="field"><label for="prName">Nombre completo</label><input class="control" id="prName"/></div>
+                <div class="grid2">
+                  <div class="field"><label for="prCmp">CMP</label><input class="control" id="prCmp" inputmode="numeric"/></div>
+                  <div class="field"><label for="prRne">RNE <span class="opt">(opcional)</span></label><input class="control" id="prRne"/></div>
+                </div>
+                <div class="grid2">
+                  <div class="field"><label for="prSpec">Especialidad</label><input class="control" id="prSpec" list="dlSpec"/></div>
+                  <div class="field"><label for="prPhone">Teléfono</label><input class="control" id="prPhone"/></div>
+                </div>
+                <div class="field"><label for="prAddr">Dirección del consultorio</label><input class="control" id="prAddr" placeholder="Av. Ejemplo 123, Lima"/></div>
+                <div class="field" style="margin-bottom:0"><label for="prClinic">Nombre del consultorio / clínica <span class="opt">(opcional)</span></label>
+                  <input class="control" id="prClinic" placeholder="Consultorio Dr. Pérez"/></div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">2</span> Firma y logo</div>
+                <div class="grid2">
+                  <div>
+                    <div class="lbl">Firma escaneada</div>
+                    <label class="upload" id="upSig" for="fileSig">
+                      <svg><use href="#i-upload"/></svg>
+                      <p>Subir imagen de firma</p><span>PNG con fondo transparente · máx. 2 MB</span>
+                    </label>
+                    <input type="file" id="fileSig" accept="image/*" style="display:none"/>
+                    <button class="btn btn-ghost btn-sm btn-block mt8" type="button" id="btnDrawSig"><svg><use href="#i-pen"/></svg> Dibujar firma</button>
+                    <button class="btn btn-danger btn-sm btn-block mt8" type="button" id="btnDelSig" style="display:none"><svg><use href="#i-trash"/></svg> Quitar firma</button>
+                  </div>
+                  <div>
+                    <div class="lbl">Logo del consultorio</div>
+                    <label class="upload" id="upLogo" for="fileLogo">
+                      <svg><use href="#i-upload"/></svg>
+                      <p>Subir logo</p><span>PNG/JPG · se mostrará en el encabezado</span>
+                    </label>
+                    <input type="file" id="fileLogo" accept="image/*" style="display:none"/>
+                    <button class="btn btn-danger btn-sm btn-block mt8" type="button" id="btnDelLogo" style="display:none"><svg><use href="#i-trash"/></svg> Quitar logo</button>
+                    <div id="sigPadWrap" style="display:none" class="mt12">
+                      <canvas id="sigPad"></canvas>
+                      <div class="row mt8" style="gap:6px">
+                        <button class="btn btn-ok btn-sm" type="button" id="btnSaveSigPad"><svg><use href="#i-check"/></svg> Guardar</button>
+                        <button class="btn btn-ghost btn-sm" type="button" id="btnClearSigPad">Borrar</button>
+                        <button class="btn btn-ghost btn-sm" type="button" id="btnCloseSigPad">Cerrar</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row"><button class="btn btn-primary btn-lg" id="btnSaveProfile" type="button"><svg><use href="#i-check"/></svg> Guardar cambios</button></div>
+            </div>
+
+            <div class="stack">
+              <div class="card card-pad">
+                <h3 style="font-size:14px;margin-bottom:6px">Cómo se verá tu membrete</h3>
+                <p class="hint mb10">Lo que ven tus pacientes en cada receta.</p>
+                <div class="sheet-wrap" style="padding:10px"><div id="sheetProfilePreview"></div></div>
+              </div>
+              <div class="card card-pad">
+                <h3 style="font-size:13.5px;margin-bottom:8px"><svg style="width:15px;height:15px;vertical-align:-2px"><use href="#i-shield"/></svg> Recuerda</h3>
+                <p class="small mut" style="line-height:1.6">La imagen de tu firma es una <b>representación visual</b>. No es firma digital certificada (Ley 27269). Para actos que exijan firma digital, usa tu certificado emitido por una entidad acreditada.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: AJUSTES ============ -->
+        <section class="view" id="view-ajustes">
+          <div class="split">
+            <div class="stack">
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">1</span> Apariencia de la receta</div>
+                <div class="lbl">Color de la cabecera</div>
+                <div class="swatches" id="swatches"></div>
+                <div class="hint">El color se aplica a la franja superior, al símbolo ℞ y a los detalles.</div>
+                <div class="grid2 mt16">
+                  <div class="field"><label for="stFont">Tipografía del cuerpo</label>
+                    <select class="control" id="stFont">
+                      <option value="sans">Moderna (sans serif)</option>
+                      <option value="serif">Clásica (serif)</option>
+                    </select></div>
+                  <div class="field"><label for="stDensity">Densidad</label>
+                    <select class="control" id="stDensity">
+                      <option value="normal">Normal</option>
+                      <option value="compact">Compacta</option>
+                    </select></div>
+                </div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">2</span> Opciones de la receta</div>
+                <div class="switch">
+                  <div class="txt"><strong>Mostrar diagnóstico</strong><span>Si lo desactivas, el campo no se imprime (recomendado para datos sensibles)</span></div>
+                  <button class="toggle on" id="tgDx" type="button" aria-label="Mostrar diagnóstico"></button>
+                </div>
+                <div class="switch">
+                  <div class="txt"><strong>Mostrar edad y sexo del paciente</strong><span>Ayuda al farmacéutico a validar la dosis</span></div>
+                  <button class="toggle on" id="tgDemo" type="button" aria-label="Mostrar edad y sexo"></button>
+                </div>
+                <div class="switch">
+                  <div class="txt"><strong>Código QR de verificación</strong><span>Permite validar la receta con el código único</span></div>
+                  <button class="toggle on" id="tgQr" type="button" aria-label="Mostrar QR"></button>
+                </div>
+                <div class="switch">
+                  <div class="txt"><strong>Marca de agua "BORRADOR"</strong><span>Solo en la vista previa mientras no emites</span></div>
+                  <button class="toggle on" id="tgDraft" type="button" aria-label="Marca de agua"></button>
+                </div>
+                <div class="switch">
+                  <div class="txt"><strong>Aviso legal al pie</strong><span>Incluye la nota de que no es receta electrónica certificada</span></div>
+                  <button class="toggle on" id="tgLegal" type="button" aria-label="Aviso legal"></button>
+                </div>
+                <div class="switch">
+                  <div class="txt"><strong>Mi derecho de autor en el pie</strong><span>«© 2026 isemperadorBR. Todos los derechos reservados.»</span></div>
+                  <button class="toggle on" id="tgCopyright" type="button" aria-label="Mostrar derecho de autor"></button>
+                </div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="section-step"><span class="n">3</span> Datos y privacidad</div>
+                <p class="small mut" style="line-height:1.6;margin-bottom:12px">
+                  Todo se guarda <b>solo en este navegador</b> (almacenamiento local). No hay servidor, no se envía nada a internet.
+                  Si borras los datos del navegador, pierdes el historial: usa <b>Respaldar</b> en el historial.
+                </p>
+                <div class="row">
+                  <button class="btn btn-ghost btn-sm" id="btnExportAll"><svg><use href="#i-down"/></svg> Exportar respaldo (.json)</button>
+                  <button class="btn btn-ghost btn-sm" id="btnImportAll"><svg><use href="#i-upload"/></svg> Importar respaldo</button>
+                  <input type="file" id="fileImport" accept=".json,application/json" style="display:none"/>
+                  <button class="btn btn-danger btn-sm" id="btnEraseAll"><svg><use href="#i-trash"/></svg> Borrar todos mis datos</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="card card-pad">
+                <h3 style="font-size:14px;margin-bottom:6px">Vista previa</h3>
+                <div class="sheet-wrap" style="padding:10px"><div id="sheetSettingsPreview"></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: AVISOS ============ -->
+        <section class="view" id="view-avisos">
+          <div class="card card-pad mb16">
+            <div class="row">
+              <div>
+                <h3 style="font-size:15px">Avisos de la plataforma</h3>
+                <p class="small mut">A diferencia del sistema original, aquí <b>tú decides</b> si quieres avisos. No hay propaganda política ni anuncios de campaña.</p>
+              </div>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-sm" id="btnReadAll"><svg><use href="#i-check"/></svg> Marcar todo leído</button>
+            </div>
+          </div>
+          <div id="noticesList"></div>
+        </section>
+
+        <!-- ============ VISTA: AYUDA LEGAL ============ -->
+        <section class="view" id="view-ayuda">
+          <div class="stack">
+            <div class="card card-pad">
+              <div class="section-step"><span class="n">!</span> Lo que debes saber antes de usar esto en consulta</div>
+              <div class="notice" style="border-color:#f0dcae;background:var(--warn-100)">
+                <div class="nic" style="background:#f7e6bd;color:var(--warn)"><svg><use href="#i-alert"/></svg></div>
+                <div><h5 style="color:var(--warn)">No es una receta electrónica certificada</h5>
+                  <p style="color:#6d4a00">Esta aplicación genera un <b>documento de prescripción legible y trazable</b>. Para que una receta electrónica tenga plena validez en el Perú se exige <b>firma digital con certificado de entidad acreditada</b> (Ley 27269; RM 351-2020-MINSA y RM 968-2021-MINSA). Una imagen de firma no cumple ese requisito.</p></div>
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <h3 style="font-size:14.5px;margin-bottom:10px">Checklist de una receta conforme (DS 014-2011-SA · DIGEMID)</h3>
+              <div class="kv-list" style="gap:8px">
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small">Nombre y apellidos del prescriptor</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small">Número de <b>CMP</b> (y RNE si atiendes en IPRESS)</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small">Especialidad</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small"><b>Dirección y teléfono</b> del consultorio (complétalos en Mi perfil)</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small">Fecha de emisión y datos del paciente</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small">Medicamento en <b>DCI (nombre genérico)</b>, forma farmacéutica y concentración</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small">Dosis, vía de administración, frecuencia y duración del tratamiento</span></div>
+                <div class="row" style="gap:8px;align-items:flex-start"><span style="color:var(--ok);flex:none"><svg style="width:16px;height:16px"><use href="#i-check"/></svg></span><span class="small"><b>Firma y sello</b> del prescriptor (agrega tu sello físico para trámites formales)</span></div>
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <h3 style="font-size:14.5px;margin-bottom:10px">Buenas prácticas de privacidad (Ley 29733)</h3>
+              <ul class="small mut" style="line-height:1.75;padding-left:20px;margin:0">
+                <li>Los datos de salud son <b>datos sensibles</b>: pide consentimiento informado al paciente para manejarlos digitalmente.</li>
+                <li>Registra solo lo necesario. Nombre, edad y documento suelen bastar para dispensar.</li>
+                <li>Si lo desactivas en Ajustes, el diagnóstico no se imprime: útil cuando el paciente compartirá la receta por WhatsApp.</li>
+                <li>Guarda tu propia copia (respaldo .json + PDF) y protégela con contraseña.</li>
+                <li>No uses esta herramienta para medicamentos controlados: requiere receta especial numerada.</li>
+                <li>Si compartes el dispositivo, cierra sesión al terminar.</li>
+              </ul>
+            </div>
+
+            <div class="card card-pad">
+              <h3 style="font-size:14.5px;margin-bottom:10px">Preguntas frecuentes</h3>
+              <details class="mb10"><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿Dónde se guardan mis recetas?</summary>
+                <p class="small mut mt8" style="line-height:1.6">En el almacenamiento local de este navegador, en tu dispositivo. No se suben a ningún servidor. Si cambias de navegador o borras los datos, no estarán: exporta un respaldo.</p></details>
+              <details class="mb10"><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿El QR sirve para que una farmacia valide la receta?</summary>
+                <p class="small mut mt8" style="line-height:1.6">El QR contiene el código único, los datos del prescriptor y el resumen de la prescripción, de modo que el farmacéutico puede contrastar el documento. Es una verificación de integridad del documento, no una validación oficial del CMP ni del MINSA.</p></details>
+              <details class="mb10"><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿Puedo usarla sin internet?</summary>
+                <p class="small mut mt8" style="line-height:1.6">Sí. Es un archivo único que funciona sin conexión, salvo el botón de WhatsApp, que abre la app de mensajería del dispositivo.</p></details>
+              <details><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿Cómo imprimo en hoja A5 o media carta?</summary>
+                <p class="small mut mt8" style="line-height:1.6">Al imprimir, elige tamaño A5 o «media carta». La receta está diseñada en formato vertical compacto. También puedes guardar como PDF y enviarlo.</p></details>
+            </div>
+
+            <div class="card card-pad" style="text-align:center">
+              <p class="small mut" style="line-height:1.7">Diseñado y desarrollado por <b style="color:var(--ink)">isemperadorBR</b>.<br/>Queda prohibida la reproducción total o parcial sin autorización.</p>
+              <div class="derechos mt8" style="font-weight:750">© 2026 isemperadorBR. Todos los derechos reservados.</div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="site-footer no-print">
+          <div class="derechos">© 2026 <b>isemperadorBR</b>. Todos los derechos reservados.</div>
+          <div class="mut" style="margin-top:4px">Rx Pro · Recetas Médicas Digitales — herramienta de apoyo; no sustituye la firma digital certificada.</div>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- TABS MÓVILES -->
+  <nav class="mobile-tabs no-print">
+    <button class="on" data-view="nueva"><svg><use href="#i-plus"/></svg>Nueva</button>
+    <button data-view="historial"><svg><use href="#i-list"/></svg>Historial</button>
+    <button data-view="perfil"><svg><use href="#i-user"/></svg>Perfil</button>
+    <button data-view="ajustes"><svg><use href="#i-cog"/></svg>Ajustes</button>
+    <button data-view="avisos"><svg><use href="#i-bell"/></svg>Avisos</button>
+  </nav>
+</div>
+
+<button id="fabPreview" type="button" aria-label="Ver vista previa de la receta"><svg><use href="#i-eye"/></svg> Ver receta</button>
+<div id="printRoot"></div>
+<div id="modal"></div>
+<div id="toasts" aria-live="polite"></div>
+<style>
+/* ajustes finos de la hoja */
+.sheet.compact .body{padding:10px 14px;gap:7px}
+.sheet.compact .m{font-size:10.3px;padding-bottom:5px}
+.sheet.compact .m .n strong{font-size:11px}
+.sheet.compact .pt{font-size:10.2px;padding:7px 9px}
+.sheet.compact .sign .line{height:28px}
+.sheet.serif .m,.sheet.serif .pt,.sheet.serif .ind,.sheet.serif .sign{font-family:Georgia,"Times New Roman",serif}
+</style>
+<script>
+/* qrcode-generator (Kazuhiko Arase, MIT) — incrustado para uso sin conexión */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script>
+(function(){
+"use strict";
+
+/* ==================== Utilidades ==================== */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = (s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nz  = (s='')=>String(s==null?'':s).trim();
+const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let STORAGE_OK = (()=>{ try{ localStorage.setItem('rxpro.t','1'); localStorage.removeItem('rxpro.t'); return true; }catch(e){ return false; } })();
+let storageWarned = false;
+const LS = {
+  get(k,d){ if(!STORAGE_OK) return d; try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;} },
+  set(k,v){
+    if(!STORAGE_OK){ warnNoStorage(); return; }
+    try{ localStorage.setItem(k, v?JSON.stringify(v):''); }
+    catch(e){ toast('bad','Sin espacio','El navegador no pudo guardar. Exporta un respaldo y libera espacio.'); }
+  },
+  del(k){ if(!STORAGE_OK) return; try{localStorage.removeItem(k);}catch(e){} }
+};
+function warnNoStorage(){
+  if(storageWarned) return; storageWarned = true;
+  toast('bad','Modo sin guardado','Este navegador no permite almacenamiento local en este contexto (por ejemplo, una vista previa incrustada). Descarga el archivo y ábrelo directamente para que el historial se guarde.', 9000);
+}
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+function fechaLarga(iso){
+  if(!iso) return '—';
+  const [y,m,d]=iso.split('-').map(Number);
+  if(!y||!m||!d) return iso;
+  return `${String(d).padStart(2,'0')} de ${MESES[m-1]} de ${y}`;
+}
+function fechaCorta(iso){
+  if(!iso) return '—';
+  const [y,m,d]=iso.split('-').map(Number);
+  if(!y||!m||!d) return iso;
+  return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+}
+async function sha256(str){
+  try{
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    let h=5381; for(let i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))>>>0;} return ('00000000'+h.toString(16)).slice(-8).repeat(4);
+  }
+}
+function iniciales(nombre){
+  const p = nz(nombre).replace(/^(Dr|Dra|Lic)\.?\s+/i,'').split(/\s+/).filter(Boolean);
+  return ((p[0]||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase();
+}
+
+/* ==================== Toasts ==================== */
+function toast(kind,title,msg,ms){
+  const el=document.createElement('div');
+  el.className='toast '+kind;
+  el.innerHTML=`<div class="tic">${kind==='ok'?'✓':kind==='bad'?'!':'i'}</div><div><strong>${esc(title)}</strong>${msg?`<span>${esc(msg)}</span>`:''}</div>`;
+  $('#toasts').appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity .25s,transform .25s';el.style.opacity='0';el.style.transform='translateX(20px)';setTimeout(()=>el.remove(),260);}, ms||3800);
+}
+
+/* ==================== Modal ==================== */
+function openModal(html){
+  const m=$('#modal');
+  m.innerHTML = html;
+  m.classList.add('on');
+  m.onclick = e=>{ if(e.target===m) closeModal(); };
+}
+function closeModal(){ const m=$('#modal'); m.classList.remove('on'); m.innerHTML=''; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ==================== Estado ==================== */
+const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme'};
+const DEF_SETTINGS = {color:'#0b3a6f', font:'sans', density:'normal', showDx:true, showDemo:true, showQr:true, draft:true, legal:true, copyright:true};
+const COLORES = ['#0b3a6f','#0f7a4d','#7a1f2b','#4a2f7a','#0a5fa8','#8a5a00','#1f2937','#a8324a'];
+
+let ST = { user:null, recs:[], settings:{...DEF_SETTINGS}, draft:null, lastEmitted:null };
+
+function dataKey(suffix){ return `rxpro.${suffix}.${ST.user.email}`; }
+function saveRecs(){ LS.set(dataKey('rec'), ST.recs); updateCounts(); }
+function saveSettings(){ LS.set(dataKey('set'), ST.settings); }
+function saveUser(){
+  const users = LS.get(K.users,{});
+  users[ST.user.email] = ST.user;
+  LS.set(K.users, users);
+}
+
+/* ==================== Autenticación ==================== */
+function setAuthTab(which){
+  const login = which==='login';
+  $('#tabLogin').classList.toggle('on', login);
+  $('#tabSignup').classList.toggle('on', !login);
+  $('#formLogin').style.display = login?'':'none';
+  $('#formSignup').style.display = login?'none':'';
+  $('#authSub').textContent = login?'Inicia sesión para gestionar tus recetas médicas':'Registra tu perfil médico para emitir recetas digitales';
+}
+$('#tabLogin').onclick = ()=>setAuthTab('login');
+$('#tabSignup').onclick = ()=>setAuthTab('signup');
+$$('[data-go-signup]').forEach(b=>b.onclick=()=>setAuthTab('signup'));
+$$('[data-go-login]').forEach(b=>b.onclick=()=>setAuthTab('login'));
+
+function badField(id,bad){ const f=$('#'+id); if(f) f.classList.toggle('bad', !!bad); }
+const emailOk = v=>/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);
+
+$('#formLogin').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const email = nz($('#lgEmail').value).toLowerCase();
+  const pass  = $('#lgPass').value;
+  let bad=false;
+  if(!emailOk(email)){badField('fLoginEmail',true);bad=true;} else badField('fLoginEmail',false);
+  if(pass.length<6){badField('fLoginPass',true);bad=true;} else badField('fLoginPass',false);
+  if(bad) return;
+
+  const users = LS.get(K.users,{});
+  const u = users[email];
+  const h = await sha256('rxpro$'+pass+'$'+email);
+  if(!u){ badField('fLoginEmail',true); toast('bad','Cuenta no encontrada','Regístrate primero en esta pestaña.'); return; }
+  if(u.pass!==h){ badField('fLoginPass',true); toast('bad','Contraseña incorrecta','Verifica e inténtalo otra vez.'); return; }
+
+  LS.set(K.session, $('#lgRemember').checked ? email : {email, tmp:true});
+  startSession(u);
+});
+
+$('#formSignup').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const name = nz($('#suName').value), email = nz($('#suEmail').value).toLowerCase();
+  const p1 = $('#suPass').value, p2 = $('#suPass2').value, cmp = nz($('#suCmp').value);
+  let bad=false;
+  if(name.split(/\s+/).length<2){badField('fSName',true);bad=true;} else badField('fSName',false);
+  if(!emailOk(email)){badField('fSEmail',true);bad=true;} else badField('fSEmail',false);
+  if(p1.length<8){badField('fSPass',true);bad=true;} else badField('fSPass',false);
+  if(p1!==p2){badField('fSPass2',true);bad=true;} else badField('fSPass2',false);
+  if(!cmp){badField('fSCmp',true);bad=true;} else badField('fSCmp',false);
+  if(!$('#suTerms').checked){ $('#suTermsErr').style.display='block'; bad=true; } else $('#suTermsErr').style.display='none';
+  if(bad) return;
+
+  const users = LS.get(K.users,{});
+  if(users[email]){ toast('bad','Ese correo ya tiene cuenta','Inicia sesión en la otra pestaña.'); return; }
+
+  const u = {
+    email, pass: await sha256('rxpro$'+p1+'$'+email),
+    nombre:name, cmp, especialidad:nz($('#suSpec').value)||'Medicina General',
+    telefono:nz($('#suPhone').value), rne:nz($('#suRne').value), direccion:nz($('#suAddr').value),
+    clinica:'', firma:'', logo:'', createdAt:new Date().toISOString()
+  };
+  users[email]=u; LS.set(K.users, users);
+  LS.set(K.session, email);
+  toast('ok','Cuenta creada','Bienvenido a Rx Pro.');
+  startSession(u);
+});
+
+$('#btnForgot').onclick = ()=>{
+  openModal(`<div class="modal-card">
+    <h3>Recuperar contraseña</h3>
+    <p>Esta aplicación funciona <b>sin servidor</b>: no hay forma de enviarte un correo de recuperación, porque no existe una base de datos central. La contraseña solo la conoces tú.</p>
+    <p class="mt12" style="font-size:12.5px">Si la olvidaste, crea una cuenta nueva con otro correo. Tus recetas anteriores siguen guardadas en este navegador bajo la cuenta anterior.</p>
+    <div class="modal-acts"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div>
+  </div>`);
+};
+window.closeModal = closeModal;
+
+function startSession(u){
+  ST.user = u;
+  ST.recs = LS.get(dataKey('rec'), []) || [];
+  ST.settings = Object.assign({}, DEF_SETTINGS, LS.get(dataKey('set'), {}) || {});
+  ST.draft = LS.get(dataKey('draft'), null);
+  $('#auth').classList.add('hidden');
+  $('#app').classList.add('on');
+  paintIdentity();
+  restoreDraft();
+  renderMeds();
+  renderSheetPreview();
+  renderHistory();
+  paintSettings();
+  paintProfile();
+  renderNotices();
+  go('nueva');
+}
+function logout(){
+  LS.del(K.session);
+  ST = { user:null, recs:[], settings:{...DEF_SETTINGS}, draft:null, lastEmitted:null };
+  $('#app').classList.remove('on');
+  $('#auth').classList.remove('hidden');
+  $('#lgPass').value='';
+  setAuthTab('login');
+}
+$('#btnLogout').onclick = ()=>{
+  openModal(`<div class="modal-card"><h3>¿Cerrar sesión?</h3><p>Tus recetas quedan guardadas en este navegador y seguirán ahí cuando vuelvas.</p>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="doLogout">Cerrar sesión</button></div></div>`);
+  $('#doLogout').onclick = ()=>{ closeModal(); logout(); };
+};
+
+function paintIdentity(){
+  $('#whoName').textContent = ST.user.nombre;
+  $('#whoSpec').textContent = ST.user.especialidad + (ST.user.cmp?` · CMP ${ST.user.cmp}`:'');
+  $('#avatarIni').textContent = iniciales(ST.user.nombre);
+}
+
+/* ==================== Tema ==================== */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  LS.set(K.theme, t);
+  const ic = $('#btnTheme use');
+  if(ic) ic.setAttribute('href', t==='dark'?'#i-sun':'#i-moon');
+}
+$('#btnTheme').onclick = ()=>{
+  applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+};
+
+/* ==================== Navegación ==================== */
+const VIEWS = {
+  nueva:    {t:'Nueva receta', s:'Completa los datos y descarga tu receta'},
+  historial:{t:'Historial',    s:'Todas tus recetas emitidas en un solo lugar'},
+  perfil:   {t:'Mi perfil',    s:'Datos profesionales, firma y logo'},
+  ajustes:  {t:'Ajustes',      s:'Apariencia y opciones de la receta'},
+  avisos:   {t:'Avisos',       s:'Comunicados de la plataforma'},
+  ayuda:    {t:'Ayuda legal',  s:'Requisitos normativos y privacidad'}
+};
+function go(v){
+  if(!VIEWS[v]) v='nueva';
+  $$('.view').forEach(s=>s.classList.toggle('on', s.id==='view-'+v));
+  $$('.nav-btn,[data-view]').forEach(b=>{
+    const t=b.getAttribute('data-view'); if(t) b.classList.toggle('on', t===v);
+  });
+  $('#viewTitle').textContent = VIEWS[v].t;
+  $('#viewSub').textContent = VIEWS[v].s;
+  if(v==='historial') renderHistory();
+  if(v==='perfil') paintProfile();
+  if(v==='ajustes') paintSettings();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$$('[data-view]').forEach(b=>b.onclick=()=>go(b.getAttribute('data-view')));
+
+/* ==================== Formas farmacéuticas / frecuencias ==================== */
+const FORMAS = ['Tableta','Cápsula','Jarabe','Suspensión','Solución oral','Ampolla','Solución inyectable','Gota','Frasco','Crema','Ungüento','Gel','Inhalador','Supositorio','Óvulo','Parche','Spray nasal','Colirio'];
+const FRECS = ['Cada 4 horas','Cada 6 horas','Cada 8 horas','Cada 12 horas','Cada 24 horas','Cada 48 horas','1 vez al día','2 veces al día','3 veces al día','4 veces al día','Dosis única','Según necesidad (SOS)','Antes de dormir','En ayunas'];
+const VIAS  = ['Oral','Sublingual','Intramuscular','Intravenosa','Subcutánea','Tópica','Inhalatoria','Oftálmica','Ótica','Nasal','Rectal','Vaginal'];
+
+/* ==================== Medicamentos ==================== */
+function medRowHTML(m,i){
+  return `<div class="med-row" data-id="${m.id}">
+    <div class="med-top">
+      <span class="idx">${i+1}</span>
+      <span class="small mut" style="font-weight:650">Medicamento</span>
+      <button class="del" type="button" title="Quitar medicamento" aria-label="Quitar medicamento"><svg><use href="#i-trash"/></svg></button>
+    </div>
+    <div class="med-grid">
+      <div class="field"><label>Nombre genérico (DCI) *</label>
+        <input class="control m-nombre" value="${esc(m.nombre)}" placeholder="Ej. Amoxicilina" data-sug="meds"/></div>
+      <div class="field"><label>Concentración</label>
+        <input class="control m-conc" value="${esc(m.conc)}" placeholder="500 mg"/></div>
+      <div class="field"><label>Forma farmacéutica</label>
+        <select class="control m-forma">${FORMAS.map(f=>`<option${f===m.forma?' selected':''}>${f}</option>`).join('')}</select></div>
+    </div>
+    <div class="med-grid2">
+      <div class="field"><label>Dosis por toma</label>
+        <input class="control m-dosis" value="${esc(m.dosis)}" placeholder="1 tableta"/></div>
+      <div class="field"><label>Frecuencia</label>
+        <input class="control m-freq" value="${esc(m.freq)}" placeholder="Cada 8 horas" list="dlFreq"/></div>
+      <div class="field"><label>Duración</label>
+        <input class="control m-dur" value="${esc(m.dur)}" placeholder="7 días"/></div>
+    </div>
+    <div class="med-grid">
+      <div class="field" style="margin-bottom:0"><label>Cantidad total</label>
+        <input class="control m-cant" value="${esc(m.cant)}" placeholder="21 tabletas"/></div>
+      <div class="field" style="margin-bottom:0"><label>Vía</label>
+        <select class="control m-via">${VIAS.map(v=>`<option${v===m.via?' selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field" style="margin-bottom:0"><label>Indicación <span class="opt">(opc.)</span></label>
+        <input class="control m-ind" value="${esc(m.ind)}" placeholder="Después de comer"/></div>
+    </div>
+  </div>`;
+}
+function newMed(){ return {id:uid(),nombre:'',conc:'',forma:'Tableta',dosis:'',freq:'',dur:'',cant:'',via:'Oral',ind:''}; }
+function medsFromDOM(){
+  return $$('#medsList .med-row').map(r=>({
+    id: r.getAttribute('data-id'),
+    nombre: nz($('.m-nombre',r).value), conc: nz($('.m-conc',r).value),
+    forma: $('.m-forma',r).value, dosis: nz($('.m-dosis',r).value),
+    freq: nz($('.m-freq',r).value), dur: nz($('.m-dur',r).value),
+    cant: nz($('.m-cant',r).value), via: $('.m-via',r).value, ind: nz($('.m-ind',r).value)
+  }));
+}
+function renderMeds(){
+  const cur = $$('#medsList .med-row').length ? medsFromDOM() : (ST.draft && ST.draft.meds && ST.draft.meds.length ? ST.draft.meds : [newMed()]);
+  $('#medsList').innerHTML = cur.map(medRowHTML).join('');
+  bindMedRows();
+  renderSheetPreview();
+}
+function bindMedRows(){
+  $$('#medsList .del').forEach(b=>b.onclick=()=>{
+    if($$('#medsList .med-row').length<=1){ toast('wait','Mínimo un medicamento','Borra los campos si no necesitas prescribir.'); return; }
+    b.closest('.med-row').remove();
+    reindexMeds(); renderSheetPreview();
+  });
+  $$('#medsList input, #medsList select').forEach(el=>{
+    el.addEventListener('input', renderSheetPreview);
+    el.addEventListener('change', renderSheetPreview);
+  });
+}
+function reindexMeds(){ $$('#medsList .med-row').forEach((r,i)=>{ $('.idx',r).textContent=i+1; }); }
+$('#btnAddMed').onclick = ()=>{
+  const meds = $$('#medsList .med-row').length ? medsFromDOM() : [];
+  meds.push(newMed());
+  $('#medsList').innerHTML = meds.map(medRowHTML).join('');
+  bindMedRows(); renderSheetPreview();
+  const last = $$('#medsList .med-row').pop();
+  if(last) $('.m-nombre',last).focus();
+};
+
+/* Plantillas de dosis */
+const PLANTILLAS = [
+  {n:'Amoxicilina 500 mg', d:'1 cápsula', f:'Cada 8 horas', du:'7 días', c:'21 cápsulas', fo:'Cápsula'},
+  {n:'Paracetamol 500 mg', d:'1 tableta', f:'Cada 8 horas', du:'3 días', c:'9 tabletas', fo:'Tableta'},
+  {n:'Ibuprofeno 400 mg', d:'1 tableta', f:'Cada 8 horas', du:'5 días', c:'15 tabletas', fo:'Tableta'},
+  {n:'Azitromicina 500 mg', d:'1 tableta', f:'Cada 24 horas', du:'3 días', c:'3 tabletas', fo:'Tableta'},
+  {n:'Omeprazol 20 mg', d:'1 cápsula', f:'En ayunas', du:'14 días', c:'14 cápsulas', fo:'Cápsula'},
+  {n:'Loratadina 10 mg', d:'1 tableta', f:'Cada 24 horas', du:'7 días', c:'7 tabletas', fo:'Tableta'},
+  {n:'Metformina 850 mg', d:'1 tableta', f:'2 veces al día', du:'30 días', c:'60 tabletas', fo:'Tableta'},
+  {n:'Salbutamol 100 mcg', d:'2 inhalaciones', f:'Según necesidad (SOS)', du:'Según evolución', c:'1 inhalador', fo:'Inhalador'},
+  {n:'Diclofenaco 75 mg', d:'1 ampolla', f:'Cada 12 horas', du:'2 días', c:'4 ampollas', fo:'Ampolla', v:'Intramuscular'},
+  {n:'Suero oral', d:'1 sobre', f:'Según necesidad (SOS)', du:'3 días', c:'6 sobres', fo:'Frasco'}
+];
+$('#btnUseTemplate').onclick = ()=>{
+  openModal(`<div class="modal-card wide">
+    <div style="padding:20px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+      <div><h3>Plantillas de dosis</h3><p style="font-size:12.5px">Un toque para precargar un esquema típico. <b>Revisa siempre la dosis</b> según el paciente.</p></div>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()" aria-label="Cerrar"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+    </div>
+    <div style="padding:14px;max-height:60vh;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px" id="tplGrid">
+      ${PLANTILLAS.map((p,i)=>`<button class="btn btn-ghost" data-tpl="${i}" style="justify-content:flex-start;text-align:left;min-height:auto;padding:11px 12px;flex-direction:column;align-items:flex-start;gap:3px">
+        <strong style="font-size:13px">${esc(p.n)}</strong>
+        <span class="small mut">${esc(p.d)} · ${esc(p.f)} · ${esc(p.du)}</span></button>`).join('')}
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--line);text-align:right">
+      <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>`);
+  $$('#tplGrid [data-tpl]').forEach(b=>b.onclick=()=>{
+    const p = PLANTILLAS[+b.getAttribute('data-tpl')];
+    const meds = $$('#medsList .med-row').length ? medsFromDOM() : [];
+    const empty = meds.find(m=>!m.nombre);
+    const obj = {id:uid(),nombre:p.n,conc:p.n.replace(/^.*?\s(\d.*)$/,'$1'),forma:p.fo,dosis:p.d,freq:p.f,dur:p.du,cant:p.c,via:p.v||'Oral',ind:''};
+    // separar concentración del nombre
+    const m = p.n.match(/^(.*?)\s(\d+\s?(?:mg|mcg|g|ml|UI|%)?.*)$/i);
+    if(m){ obj.nombre = m[1]; obj.conc = m[2]; }
+    if(empty){ Object.assign(empty,obj); } else { meds.push(obj); }
+    // si el usuario eligió "Suspensión/Jarabe", la concentración debe ir por volumen
+    if(/jarabe|suspensi/i.test(obj.forma) && /(mg|mcg|g)$/i.test(obj.conc)) obj.conc += '/5 ml';
+    $('#medsList').innerHTML = meds.map(medRowHTML).join('');
+    bindMedRows(); renderSheetPreview(); closeModal();
+    toast('ok','Plantilla aplicada',p.n);
+  });
+};
+
+/* ==================== Datos de la receta (formulario) ==================== */
+function readForm(){
+  return {
+    paciente:{ nombre:nz($('#pNombre').value), edad:nz($('#pEdad').value), sexo:$('#pSexo').value, doc:nz($('#pDoc').value) },
+    fecha: $('#pFecha').value || new Date().toISOString().slice(0,10),
+    dx: nz($('#pDx').value),
+    alerg: nz($('#pAlerg').value),
+    indic: nz($('#pIndic').value),
+    tipo: ($$('[data-tipo].on')[0]||{getAttribute:()=>'simple'}).getAttribute('data-tipo'),
+    meds: $$('#medsList .med-row').length ? medsFromDOM() : []
+  };
+}
+function fillForm(d){
+  if(!d) return;
+  $('#pNombre').value = d.paciente?.nombre||'';
+  $('#pEdad').value   = d.paciente?.edad||'';
+  $('#pSexo').value   = d.paciente?.sexo||'';
+  $('#pDoc').value    = d.paciente?.doc||'';
+  $('#pFecha').value  = d.fecha || new Date().toISOString().slice(0,10);
+  $('#pDx').value     = d.dx||'';
+  $('#pAlerg').value  = d.alerg||'';
+  $('#pIndic').value  = d.indic||'';
+  setTipo(d.tipo||'simple');
+}
+function setTipo(t){
+  $$('[data-tipo]').forEach(b=>b.classList.toggle('on', b.getAttribute('data-tipo')===t));
+  $('#ctrlWarn').style.display = t==='controlada'?'':'none';
+}
+$$('[data-tipo]').forEach(b=>b.onclick=()=>{ setTipo(b.getAttribute('data-tipo')); renderSheetPreview(); });
+$$('[data-indic]').forEach(b=>b.onclick=()=>{
+  const t=b.getAttribute('data-indic'); const ta=$('#pIndic');
+  ta.value = nz(ta.value) ? (ta.value.replace(/\s*$/,'') + ' ' + t) : t;
+  ta.focus(); renderSheetPreview();
+});
+
+/* Autoguardado del borrador */
+let draftTimer=null;
+function scheduleDraft(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(()=>{
+    if(!ST.user) return;
+    const d = readForm();
+    const hasContent = d.paciente.nombre || d.meds.some(m=>m.nombre) || d.indic;
+    if(hasContent){ LS.set(dataKey('draft'), d); } else { LS.del(dataKey('draft')); }
+    renderSheetPreview();
+  }, 350);
+}
+function restoreDraft(){
+  $('#pFecha').value = new Date().toISOString().slice(0,10);
+  if(ST.draft){
+    fillForm(ST.draft);
+    if(ST.draft.meds && ST.draft.meds.length){
+      $('#medsList').innerHTML = ST.draft.meds.map(medRowHTML).join('');
+      bindMedRows();
+    }
+    toast('wait','Borrador recuperado','Retomamos la receta que dejaste a medias.');
+  }
+}
+['pNombre','pEdad','pSexo','pDoc','pFecha','pDx','pAlerg','pIndic'].forEach(id=>{
+  const el=$('#'+id);
+  el.addEventListener('input', scheduleDraft);
+  el.addEventListener('change', scheduleDraft);
+});
+
+/* ==================== Render de la hoja ==================== */
+function buildPayload(r){
+  const code = r.code || 'BORRADOR';
+  const medsTxt = (r.meds||[]).map((m,i)=>{
+    const base = [m.nombre, m.conc].filter(Boolean).join(' ');
+    const dosis = [m.dosis, m.freq, m.dur].filter(Boolean).join(' · ');
+    return `${i+1}) ${base}${dosis?' — '+dosis:''}`;
+  }).join(' | ');
+  return [`RXPRO/1`, `COD:${code}`, `PRES:${nz(ST.user.nombre)}`, `CMP:${nz(ST.user.cmp)}`,
+    `ESP:${nz(ST.user.especialidad)}`, `FECHA:${r.fecha}`, `PAC:${nz(r.paciente?.nombre)}`,
+    `MED:${medsTxt}`].join('\n');
+}
+function makeQR(text, px){
+  try{
+    const q = qrcode(0,'M'); q.addData(text); q.make();
+    const svg = q.createSvgTag({cellSize:2, margin:0, scalable:true});
+    return svg.replace('<svg','<svg style="width:'+px+'px;height:'+px+'px"');
+  }catch(e){ return `<div style="font-size:8px;color:#999">QR no disponible</div>`; }
+}
+function renderSheet(r, opts){
+  opts = opts||{};
+  const s = ST.settings, u = ST.user, draft = !!opts.draft;
+  const qrOn = s.showQr && !draft;
+  const cls = ['sheet']; if(s.density==='compact') cls.push('compact'); if(s.font==='serif') cls.push('serif');
+  const color = s.color || '#0b3a6f';
+  const meds = (r.meds||[]).filter(m=>nz(m.nombre));
+  const code = r.code || '';
+  const qrText = buildPayload(r);
+  const cpy = s.copyright ? '© 2026 isemperadorBR' : '';
+
+  return `<div class="${cls.join(' ')}" style="--rx:${color}">
+    ${draft && s.draft ? '<div class="watermark"><span>BORRADOR</span></div>' : ''}
+    <div class="band">
+      <div class="logo">${u.logo?`<img src="${u.logo}" alt="logo"/>`:'Rx'}</div>
+      <div class="who-rx">
+        <h3>${esc(u.nombre||'Nombre del prescriptor')}</h3>
+        <div class="spec">${esc(u.especialidad||'Especialidad')}${u.clinica?' · '+esc(u.clinica):''}</div>
+        <div class="doc">CMP ${esc(u.cmp||'—')}${u.rne?' · RNE '+esc(u.rne):''}${u.direccion?'<br/>'+esc(u.direccion):''}${u.telefono?' · Tel. '+esc(u.telefono):''}</div>
+      </div>
+      <div class="rxsym">℞</div>
+    </div>
+
+    <div class="body">
+      <div class="pt">
+        <div class="f full"><b>Paciente:</b><span>${esc(r.paciente?.nombre||'—')}</span></div>
+        ${(s.showDemo && (r.paciente?.edad||r.paciente?.sexo))?`<div class="f"><b>Edad:</b><span>${esc(r.paciente.edad||'—')}${r.paciente.sexo?' ('+esc(r.paciente.sexo)+')':''}</span></div>`:''}
+        ${r.paciente?.doc?`<div class="f"><b>Doc.:</b><span>${esc(r.paciente.doc)}</span></div>`:''}
+        <div class="f"><b>Fecha:</b><span>${esc(fechaCorta(r.fecha))}</span></div>
+      </div>
+
+      ${s.showDx && r.dx?`<div class="dx"><b>Diagnóstico:</b> ${esc(r.dx)}</div>`:''}
+      ${r.alerg?`<div class="dx" style="color:#a5202b"><b style="color:#a5202b">Alergias:</b> ${esc(r.alerg)}</div>`:''}
+
+      <div class="rxline">℞ <small>Prescripción</small></div>
+
+      <div class="meds">
+        ${meds.length? meds.map((m,i)=>`
+          <div class="m">
+            <div class="n"><span class="num">${i+1}.</span><strong>${esc(m.nombre)}</strong>${m.conc?`<span class="conc">${esc(m.conc)}</span>`:''}</div>
+            <div class="d">${[m.forma,m.dosis,m.freq,m.dur,m.cant,m.via].filter(Boolean).map(esc).join(' · ')}${m.ind?` — <b>${esc(m.ind)}</b>`:''}</div>
+          </div>`).join('') : `<div class="m"><div class="d" style="padding-left:0;color:#93a5bb">Agrega al menos un medicamento…</div></div>`}
+      </div>
+
+      ${r.indic?`<div class="ind"><b>Indicaciones</b>${esc(r.indic)}</div>`:''}
+      ${r.tipo==='controlada'?`<div class="ind" style="border-left-color:#a5202b;color:#7d2a32;background:#fde4e6"><b style="color:#a5202b">Receta controlada</b>Requiere además receta especial numerada según DIGEMID.</div>`:''}
+    </div>
+
+    <div class="foot">
+      <div class="sign">
+        <div class="line">${u.firma?`<img src="${u.firma}" alt="firma"/>`:''}</div>
+        <div class="nm">${esc(u.nombre||'—')}</div>
+        <div class="cm">CMP ${esc(u.cmp||'—')} · ${esc(u.especialidad||'')}</div>
+      </div>
+      ${qrOn?`<div class="qr">${makeQR(qrText,72)}<div class="cd">${esc(code)}</div><div style="font-size:6.4px;color:#7b8ea6;margin-top:1px">Escanee para verificar</div></div>`:''}
+    </div>
+
+    <div class="strip">
+      <span>${s.legal?'Documento de prescripción. No constituye receta electrónica con firma digital certificada (Ley 27269).':''}</span>
+      <span class="cpy">${cpy}</span>
+    </div>
+    ${(code && !qrOn)?`<div class="num-idx">${esc(code)}</div>`:''}
+  </div>`;
+}
+
+const SAMPLE = {
+  paciente:{nombre:'María Elena Quispe Rojas', edad:'34', sexo:'F', doc:'45872136'},
+  fecha: new Date().toISOString().slice(0,10),
+  dx:'Faringitis aguda (J02.9)', alerg:'Penicilina',
+  indic:'Reposo relativo 48 h, abundantes líquidos. Control en 7 días o antes si empeora.',
+  tipo:'simple',
+  meds:[{id:'s1',nombre:'Azitromicina',conc:'500 mg',forma:'Tableta',dosis:'1 tableta',freq:'Cada 24 horas',dur:'3 días',cant:'3 tabletas',via:'Oral',ind:'Después de comer'}]
+};
+function renderSheetPreview(){
+  const r = readForm();
+  const has = r.paciente.nombre || r.meds.some(m=>m.nombre) || r.indic;
+  const el = $('#sheetPreview');
+  if(!el) return;
+  if(!has && !ST.lastEmitted){
+    el.innerHTML = renderSheet(SAMPLE,{draft:true});
+    const b=$('#previewBadge'); if(b){b.textContent='Ejemplo';b.className='badge badge-line';}
+  }else{
+    el.innerHTML = renderSheet(r,{draft:true});
+    const b=$('#previewBadge'); if(b){b.textContent='Borrador';b.className='badge badge-warn';}
+  }
+}
+function renderProfilePreview(){ const el=$('#sheetProfilePreview'); if(el) el.innerHTML = renderSheet(SAMPLE,{draft:true}); }
+function renderSettingsPreview(){ const el=$('#sheetSettingsPreview'); if(el) el.innerHTML = renderSheet(SAMPLE,{draft:true}); }
+
+/* ==================== Emitir ==================== */
+$('#btnEmit').onclick = async ()=>{
+  const r = readForm();
+  const errs=[];
+  if(!nz(ST.user.nombre)) errs.push('Tu nombre en Mi perfil');
+  if(!nz(ST.user.cmp)) errs.push('Tu CMP en Mi perfil');
+  if(!r.paciente.nombre) errs.push('El nombre del paciente');
+  if(!r.meds.some(m=>nz(m.nombre))) errs.push('Al menos un medicamento');
+  if(errs.length){
+    toast('bad','Faltan datos', 'Completa: '+errs.join(', ')+'.'); return;
+  }
+  const seq = ST.recs.length + 1;
+  const code = 'RX-'+r.fecha.replace(/-/g,'')+'-'+String(seq).padStart(3,'0');
+  const payload = buildPayload({...r, code});
+  const hash = (await sha256(payload)).slice(0,12).toUpperCase();
+  const rec = {...r, code, hash, id:uid(), creadaEn:new Date().toISOString(), tipo:r.tipo};
+  ST.recs.unshift(rec);
+  saveRecs();
+  ST.lastEmitted = rec;
+  LS.set(dataKey('lastEmit'), rec);
+  const b=$('#previewBadge'); if(b){b.textContent='Emitida · '+code;b.className='badge badge-ok';}
+  $('#sheetPreview').innerHTML = renderSheet(rec,{draft:false});
+  renderHistory();
+  toast('ok','Receta emitida', code+' · ya puedes descargarla o imprimirla.', 6000);
+  openModal(`<div class="modal-card">
+    <div class="row" style="gap:10px;margin-bottom:10px">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--ok-100);color:var(--ok);display:grid;place-items:center;flex:none"><svg style="width:20px;height:20px"><use href="#i-check"/></svg></div>
+      <div><h3 style="font-size:15.5px">Receta emitida</h3><p class="small mut">Código <b class="mono">${esc(code)}</b> · hash ${esc(hash.slice(0,8))}</p></div>
+    </div>
+    <div class="verify-box" style="text-align:center">
+      <div style="display:inline-block">${makeQR(payload, 150)}</div>
+      <p class="small mut mt8">Escanea para verificar los datos de esta receta</p>
+    </div>
+    <div class="modal-acts" style="flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="closeModal()">Seguir editando</button>
+      <button class="btn btn-primary" id="mdPdf"><svg><use href="#i-down"/></svg> PDF / Imprimir</button>
+    </div>
+  </div>`);
+  $('#mdPdf').onclick = ()=>{ closeModal(); doPrint(rec); };
+};
+
+$('#btnClear').onclick = ()=>{
+  openModal(`<div class="modal-card"><h3>¿Limpiar el formulario?</h3><p>Se borrarán los datos del paciente y los medicamentos que no hayas emitido.</p>
+  <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" id="doClear">Limpiar</button></div></div>`);
+  $('#doClear').onclick = ()=>{
+    closeModal();
+    ['pNombre','pEdad','pDoc','pDx','pAlerg','pIndic'].forEach(id=>$('#'+id).value='');
+    $('#pSexo').value=''; $('#pFecha').value=new Date().toISOString().slice(0,10);
+    ST.lastEmitted=null; LS.del(dataKey('draft')); ST.draft=null;
+    renderMeds(); setTipo('simple'); renderSheetPreview();
+    toast('ok','Formulario limpio','Listo para una nueva receta.');
+  };
+};
+
+/* ==================== Imprimir / PDF ==================== */
+function doPrint(rec){
+  if(!rec){ toast('wait','Nada que imprimir','Emite la receta primero.'); return; }
+  $('#printRoot').innerHTML = renderSheet(rec,{draft:false});
+  setTimeout(()=>{ window.print(); }, 120);
+}
+$('#btnPreviewPdf').onclick = ()=>{
+  const r = ST.lastEmitted || readForm();
+  if(!ST.lastEmitted && !r.paciente.nombre){ toast('wait','Borrador sin datos','Completa el paciente y emite la receta.'); return; }
+  doPrint(ST.lastEmitted || {...r, code:'BORRADOR', fecha:r.fecha});
+};
+$('#btnPreviewShare').onclick = ()=>{
+  const r = ST.lastEmitted;
+  if(!r){ toast('wait','Emite primero','El código de verificación se crea al emitir la receta.'); return; }
+  shareWhatsApp(r);
+};
+$('#btnPreviewQr').onclick = ()=>{
+  const r = ST.lastEmitted;
+  if(!r){ toast('wait','Emite primero','El QR se genera al emitir la receta.'); return; }
+  showVerify(r);
+};
+function shareWhatsApp(r){
+  const meds = (r.meds||[]).filter(m=>nz(m.nombre)).map((m,i)=>`${i+1}. ${m.nombre} ${m.conc||''} — ${[m.dosis,m.freq,m.dur].filter(Boolean).join(', ')}`).join('\n');
+  const msg =
+`*RECETA MÉDICA* ${r.code}
+${ST.user.nombre} · CMP ${ST.user.cmp}
+${ST.user.especialidad||''}
+Fecha: ${fechaLarga(r.fecha)}
+
+Paciente: ${r.paciente.nombre}${r.paciente.edad?' ('+r.paciente.edad+')':''}
+
+${meds}
+${r.indic?'\nIndicaciones: '+r.indic:''}
+
+Verificación: ${r.code} · ${r.hash.slice(0,8)}
+${ST.settings.legal?'\nDocumento de prescripción digital. No sustituye la receta electrónica con firma digital certificada.':''}`;
+  const url = 'https://wa.me/?text='+encodeURIComponent(msg);
+  window.open(url,'_blank','noopener');
+  toast('ok','WhatsApp abierto','Revisa el mensaje antes de enviarlo.');
+}
+function showVerify(r){
+  const meds = (r.meds||[]).filter(m=>nz(m.nombre));
+  openModal(`<div class="modal-card wide">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+      <div style="width:38px;height:38px;border-radius:11px;background:var(--primary-100);color:var(--primary);display:grid;place-items:center;flex:none"><svg style="width:19px;height:19px"><use href="#i-qr"/></svg></div>
+      <div><h3 style="font-size:15px">Verificación ${esc(r.code)}</h3><p class="small mut">Integridad del documento</p></div>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()" aria-label="Cerrar"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+    </div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start">
+      <div style="text-align:center">${makeQR(buildPayload(r),160)}<div class="mono small" style="margin-top:6px;font-weight:800">${esc(r.code)}</div></div>
+      <div class="verify-box">
+        <div class="kv" style="grid-template-columns:96px 1fr">
+          <b>Prescriptor</b><span>${esc(ST.user.nombre)}</span>
+          <b>CMP</b><span>${esc(ST.user.cmp)}</span>
+          <b>Especialidad</b><span>${esc(ST.user.especialidad||'—')}</span>
+          <b>Paciente</b><span>${esc(r.paciente.nombre)}</span>
+          <b>Fecha</b><span>${esc(fechaLarga(r.fecha))}</span>
+          <b>Medicamentos</b><span>${meds.length} prescrito(s)</span>
+          <b>Hash</b><span class="mono" style="font-size:10.5px;word-break:break-all">${esc(r.hash)}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      <button class="btn btn-ok" id="mdWa"><svg><use href="#i-share"/></svg> WhatsApp</button>
+      <button class="btn btn-primary" id="mdPrint"><svg><use href="#i-print"/></svg> Imprimir</button>
+    </div>
+  </div>`);
+  $('#mdWa').onclick = ()=>shareWhatsApp(r);
+  $('#mdPrint').onclick = ()=>{ closeModal(); doPrint(r); };
+}
+
+/* ==================== Historial ==================== */
+function updateCounts(){
+  const n = ST.recs.length;
+  const p=$('#navCount'); if(p) p.textContent = n;
+  const t=$('#stTotal'); if(t) t.textContent = n;
+  const mes = ST.recs.filter(r=>(r.fecha||'').startsWith(new Date().toISOString().slice(0,7))).length;
+  const m=$('#stMes'); if(m) m.textContent = mes;
+  const ml=$('#stMesLabel'); if(ml) ml.textContent = MESES[new Date().getMonth()]+' '+new Date().getFullYear();
+  const pac = new Set(ST.recs.map(r=>nz(r.paciente?.nombre).toLowerCase()).filter(Boolean)).size;
+  const pp=$('#stPac'); if(pp) pp.textContent = pac;
+  const meds = ST.recs.reduce((a,r)=>a+(r.meds||[]).filter(m=>nz(m.nombre)).length,0);
+  const mm=$('#stMeds'); if(mm) mm.textContent = meds;
+}
+function renderHistory(){
+  updateCounts();
+  const q = nz(($('#hSearch')||{value:''}).value).toLowerCase();
+  const sort = ($('#hSort')||{value:'fecha-desc'}).value;
+  let list = ST.recs.slice();
+  if(q){
+    list = list.filter(r=>{
+      const hay = [r.code, r.paciente?.nombre, r.dx, r.indic, ...(r.meds||[]).map(m=>m.nombre+' '+m.conc)].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  list.sort((a,b)=>{
+    if(sort==='paciente') return nz(a.paciente?.nombre).localeCompare(nz(b.paciente?.nombre));
+    const cmp = (a.fecha+a.creadaEn).localeCompare(b.fecha+b.creadaEn);
+    return sort==='fecha-asc'?cmp:-cmp;
+  });
+  const cont = $('#recList');
+  if(!cont) return;
+  $('#histEmpty').style.display = ST.recs.length? 'none':'';
+  cont.innerHTML = list.map(r=>{
+    const nm = (r.meds||[]).filter(m=>nz(m.nombre));
+    return `<div class="rec-item" data-id="${r.id}">
+      <div class="code">${esc(r.code)}</div>
+      <div>
+        <h4>${esc(r.paciente?.nombre||'Sin paciente')}</h4>
+        <div class="meta">
+          <span>${esc(fechaCorta(r.fecha))}</span>
+          <span>·</span>
+          <span>${nm.length} medicamento${nm.length===1?'':'s'}</span>
+          ${r.paciente?.edad?'<span>·</span><span>'+esc(r.paciente.edad)+' años</span>':''}
+          ${r.dx?'<span class="badge badge-line" style="font-size:10px">'+esc(r.dx.slice(0,26))+(r.dx.length>26?'…':'')+'</span>':''}
+          ${r.tipo==='controlada'?'<span class="badge badge-danger" style="font-size:10px">Controlada</span>':''}
+        </div>
+        <div class="small mut" style="margin-top:3px">${nm.map(m=>esc(m.nombre)).join(', ').slice(0,80)}</div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-ghost btn-sm" data-act="ver" title="Ver"><svg><use href="#i-eye"/></svg></button>
+        <button class="btn btn-ghost btn-sm" data-act="pdf" title="PDF"><svg><use href="#i-down"/></svg></button>
+        <button class="btn btn-ghost btn-sm" data-act="wa" title="WhatsApp"><svg><use href="#i-share"/></svg></button>
+        <button class="btn btn-ghost btn-sm" data-act="qr" title="Verificar"><svg><use href="#i-qr"/></svg></button>
+        <button class="btn btn-danger btn-sm" data-act="del" title="Eliminar"><svg><use href="#i-trash"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+  if(!list.length && ST.recs.length){
+    cont.innerHTML = `<div class="empty"><div class="ico"><svg><use href="#i-search"/></svg></div><h4>Sin resultados</h4><p>No hay recetas que coincidan con «${esc(q)}».</p></div>`;
+  }
+  $$('#recList [data-act]').forEach(b=>b.onclick=()=>{
+    const id = b.closest('.rec-item').getAttribute('data-id');
+    const r = ST.recs.find(x=>x.id===id); if(!r) return;
+    const act = b.getAttribute('data-act');
+    if(act==='ver') viewRecipe(r);
+    if(act==='pdf') doPrint(r);
+    if(act==='wa') shareWhatsApp(r);
+    if(act==='qr') showVerify(r);
+    if(act==='del') confirmDelete(r);
+  });
+}
+function viewRecipe(r){
+  openModal(`<div class="modal-card wide">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+      <div><h3 style="font-size:14.5px">${esc(r.code)}</h3><p class="small mut">${esc(fechaLarga(r.fecha))} · ${esc(r.paciente?.nombre||'')}</p></div>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()" aria-label="Cerrar"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+    </div>
+    <div style="padding:16px;background:var(--surface-2);max-height:64vh;overflow:auto;display:grid;place-items:center">
+      ${renderSheet(r,{draft:false})}
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      <button class="btn btn-ghost" id="mvQr"><svg><use href="#i-qr"/></svg> Verificar</button>
+      <button class="btn btn-ok" id="mvWa"><svg><use href="#i-share"/></svg> WhatsApp</button>
+      <button class="btn btn-primary" id="mvPdf"><svg><use href="#i-down"/></svg> PDF / Imprimir</button>
+    </div>
+  </div>`);
+  $('#mvPdf').onclick=()=>{closeModal();doPrint(r);};
+  $('#mvWa').onclick=()=>{closeModal();shareWhatsApp(r);};
+  $('#mvQr').onclick=()=>{closeModal();showVerify(r);};
+}
+function confirmDelete(r){
+  openModal(`<div class="modal-card"><h3>¿Eliminar la receta ${esc(r.code)}?</h3>
+    <p>Se borrará del historial de este navegador de forma permanente. Si necesitas conservarla, descarga el PDF antes.</p>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" id="doDel">Eliminar</button></div></div>`);
+  $('#doDel').onclick = ()=>{
+    closeModal();
+    ST.recs = ST.recs.filter(x=>x.id!==r.id);
+    saveRecs(); renderHistory();
+    toast('ok','Receta eliminada', r.code);
+  };
+}
+['#hSearch','#hSort'].forEach(s=>{ const el=$(s); if(el){ el.addEventListener('input',renderHistory); el.addEventListener('change',renderHistory);} });
+
+/* ==================== Perfil ==================== */
+function paintProfile(){
+  if(!ST.user) return;
+  $('#prName').value  = ST.user.nombre||'';
+  $('#prCmp').value   = ST.user.cmp||'';
+  $('#prRne').value   = ST.user.rne||'';
+  $('#prSpec').value  = ST.user.especialidad||'';
+  $('#prPhone').value = ST.user.telefono||'';
+  $('#prAddr').value  = ST.user.direccion||'';
+  $('#prClinic').value= ST.user.clinica||'';
+  const upSig=$('#upSig'), upLogo=$('#upLogo');
+  upSig.classList.toggle('has', !!ST.user.firma);
+  upLogo.classList.toggle('has', !!ST.user.logo);
+  upSig.innerHTML = ST.user.firma
+    ? `<img src="${ST.user.firma}" alt="firma"/><p class="mt8" style="font-size:11px;color:var(--ok)">Firma cargada · toca para cambiar</p>`
+    : `<svg><use href="#i-upload"/></svg><p>Subir imagen de firma</p><span>PNG transparente · máx. 2 MB</span>`;
+  upLogo.innerHTML = ST.user.logo
+    ? `<img src="${ST.user.logo}" alt="logo"/><p class="mt8" style="font-size:11px;color:var(--ok)">Logo cargado · toca para cambiar</p>`
+    : `<svg><use href="#i-upload"/></svg><p>Subir logo</p><span>PNG/JPG · se muestra en el encabezado</span>`;
+  $('#btnDelSig').style.display = ST.user.firma?'':'none';
+  $('#btnDelLogo').style.display = ST.user.logo?'':'none';
+  renderProfilePreview();
+}
+$('#btnSaveProfile').onclick = ()=>{
+  if(!nz($('#prName').value) || !nz($('#prCmp').value)){
+    toast('bad','Datos incompletos','Nombre y CMP son obligatorios en toda receta.'); return;
+  }
+  ST.user.nombre = nz($('#prName').value);
+  ST.user.cmp = nz($('#prCmp').value);
+  ST.user.rne = nz($('#prRne').value);
+  ST.user.especialidad = nz($('#prSpec').value);
+  ST.user.telefono = nz($('#prPhone').value);
+  ST.user.direccion = nz($('#prAddr').value);
+  ST.user.clinica = nz($('#prClinic').value);
+  saveUser(); paintIdentity(); renderProfilePreview(); renderSheetPreview();
+  toast('ok','Perfil guardado','Tus próximas recetas usarán estos datos.');
+};
+
+function fileToDataUrl(file, cb, maxKB){
+  maxKB = maxKB||2048;
+  if(file.size > maxKB*1024){ toast('bad','Archivo muy grande','Usa una imagen de menos de '+Math.round(maxKB/1024)+' MB.'); return; }
+  const fr=new FileReader();
+  fr.onload=()=>cb(fr.result);
+  fr.onerror=()=>toast('bad','No se pudo leer','Intenta con otro archivo.');
+  fr.readAsDataURL(file);
+}
+$('#fileSig').onchange = e=>{ const f=e.target.files[0]; if(!f) return; fileToDataUrl(f,url=>{ ST.user.firma=url; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Firma cargada','Se mostrará en tus recetas.'); }); e.target.value=''; };
+$('#fileLogo').onchange= e=>{ const f=e.target.files[0]; if(!f) return; fileToDataUrl(f,url=>{ ST.user.logo=url; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Logo cargado',''); }); e.target.value=''; };
+$('#btnDelSig').onclick = ()=>{ ST.user.firma=''; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Firma eliminada',''); };
+$('#btnDelLogo').onclick= ()=>{ ST.user.logo=''; saveUser(); paintProfile(); renderSheetPreview(); toast('ok','Logo eliminado',''); };
+
+/* Firma dibujada */
+let padCtx=null, drawing=false, hasInk=false;
+$('#btnDrawSig').onclick = ()=>{
+  const w=$('#sigPadWrap');
+  w.style.display = w.style.display==='none'?'':'none';
+  if(w.style.display===''){
+    const c=$('#sigPad'); const r=c.getBoundingClientRect();
+    c.width = Math.max(320, Math.floor(r.width))*2; c.height = 120*2;
+    padCtx=c.getContext('2d'); padCtx.scale(2,2);
+    padCtx.lineWidth=2.2; padCtx.lineCap='round'; padCtx.lineJoin='round'; padCtx.strokeStyle='#12233b';
+    padCtx.fillStyle='#fff'; padCtx.fillRect(0,0,c.width,c.height);
+    hasInk=false;
+  }
+};
+function padPos(e){
+  const c=$('#sigPad'); const r=c.getBoundingClientRect();
+  const t = e.touches? e.touches[0] : e;
+  return {x:(t.clientX-r.left), y:(t.clientY-r.top)};
+}
+['mousedown','touchstart'].forEach(ev=>$('#sigPad').addEventListener(ev,e=>{
+  e.preventDefault(); if(!padCtx) return; drawing=true; hasInk=true;
+  const p=padPos(e); padCtx.beginPath(); padCtx.moveTo(p.x,p.y);
+},{passive:false}));
+['mousemove','touchmove'].forEach(ev=>$('#sigPad').addEventListener(ev,e=>{
+  if(!drawing) return; e.preventDefault();
+  const p=padPos(e); padCtx.lineTo(p.x,p.y); padCtx.stroke();
+},{passive:false}));
+['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>$('#sigPad').addEventListener(ev,()=>{drawing=false;}));
+$('#btnClearSigPad').onclick=()=>{ if(!padCtx) return; const c=$('#sigPad'); padCtx.clearRect(0,0,c.width,c.height); padCtx.fillStyle='#fff'; padCtx.fillRect(0,0,c.width,c.height); hasInk=false; };
+$('#btnCloseSigPad').onclick=()=>{ $('#sigPadWrap').style.display='none'; };
+$('#btnSaveSigPad').onclick=()=>{
+  if(!hasInk){ toast('wait','Firma vacía','Dibuja tu firma antes de guardar.'); return; }
+  ST.user.firma = $('#sigPad').toDataURL('image/png');
+  saveUser(); paintProfile(); renderSheetPreview();
+  $('#sigPadWrap').style.display='none';
+  toast('ok','Firma guardada','Dibujo convertido en imagen.');
+};
+
+/* ==================== Ajustes ==================== */
+function paintSettings(){
+  const s = ST.settings;
+  const sw=$('#swatches');
+  if(sw){
+    sw.innerHTML = COLORES.map(c=>`<button class="swatch${s.color===c?' on':''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('');
+    $$('#swatches .swatch').forEach(b=>b.onclick=()=>{
+      ST.settings.color=b.getAttribute('data-color'); saveSettings(); paintSettings(); renderSheetPreview(); renderSettingsPreview();
+    });
+  }
+  const f=$('#stFont'); if(f) f.value=s.font||'sans';
+  const d=$('#stDensity'); if(d) d.value=s.density||'normal';
+  const map={tgDx:'showDx',tgDemo:'showDemo',tgQr:'showQr',tgDraft:'draft',tgLegal:'legal',tgCopyright:'copyright'};
+  Object.keys(map).forEach(id=>{
+    const el=$('#'+id); if(!el) return;
+    el.classList.toggle('on', !!s[map[id]]);
+    el.onclick=()=>{
+      ST.settings[map[id]] = !ST.settings[map[id]];
+      saveSettings(); paintSettings(); renderSheetPreview(); renderSettingsPreview();
+    };
+  });
+  renderSettingsPreview();
+}
+['#stFont','#stDensity'].forEach(sel=>{ const el=$(sel); if(el) el.onchange=()=>{
+  ST.settings.font = $('#stFont').value; ST.settings.density = $('#stDensity').value;
+  saveSettings(); renderSheetPreview(); renderSettingsPreview();
+};});
+
+/* ==================== Respaldos ==================== */
+function download(filename, text, mime){
+  const blob = new Blob([text], {type: mime||'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 200);
+}
+function exportAll(){
+  const data = {app:'Rx Pro', version:1, exportado:new Date().toISOString(), perfil:ST.user, ajustes:ST.settings, recetas:ST.recs};
+  download(`rxpro-respaldo-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(data,null,2));
+  toast('ok','Respaldo descargado','Guárdalo en un lugar seguro.');
+}
+$('#btnExportAll').onclick = exportAll;
+$('#btnExportJson').onclick = exportAll;
+$('#btnImportAll').onclick = ()=>$('#fileImport').click();
+$('#fileImport').onchange = e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const d=JSON.parse(fr.result);
+      if(!d.recetas || !Array.isArray(d.recetas)) throw new Error('formato');
+      openModal(`<div class="modal-card"><h3>Importar respaldo</h3>
+        <p>Se agregarán <b>${d.recetas.length}</b> receta(s) al historial actual. Las existentes no se borran.</p>
+        <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="doImp">Importar</button></div></div>`);
+      $('#doImp').onclick = ()=>{
+        closeModal();
+        const ids = new Set(ST.recs.map(r=>r.id));
+        d.recetas.forEach(r=>{ if(!ids.has(r.id)) ST.recs.push(r); });
+        saveRecs(); renderHistory();
+        toast('ok','Respaldo importado','Historial actualizado.');
+      };
+    }catch(err){ toast('bad','Archivo inválido','No parece un respaldo de Rx Pro.'); }
+  };
+  fr.readAsText(f);
+  e.target.value='';
+};
+$('#btnEraseAll').onclick = ()=>{
+  openModal(`<div class="modal-card"><h3 style="color:var(--danger)">Borrar todos mis datos</h3>
+    <p>Se eliminarán tu perfil, tu firma, tus ajustes y <b>las ${ST.recs.length} recetas</b> guardadas en este navegador. Esta acción no se puede deshacer.</p>
+    <p class="mt8 small mut">Descarga antes un respaldo si quieres conservarlas.</p>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" id="doErase">Sí, borrar todo</button></div></div>`);
+  $('#doErase').onclick = ()=>{
+    const email = ST.user.email;
+    LS.del(dataKey('rec')); LS.del(dataKey('set')); LS.del(dataKey('draft'));
+    const users = LS.get(K.users,{}); delete users[email]; LS.set(K.users,users);
+    closeModal(); logout();
+    toast('ok','Datos eliminados','Tu cuenta local fue borrada.');
+  };
+};
+
+/* ==================== Avisos ==================== */
+const NOTICES = [
+  {id:'n1', t:'Bienvenido a Rx Pro', ic:'#i-shield', d:'Esta es la versión autónoma: todo se guarda en tu navegador. Exporta un respaldo periódicamente desde Ajustes o el Historial.', when:'Siempre visible'},
+  {id:'n2', t:'Sin anuncios ni propaganda', ic:'#i-check', d:'A diferencia de otras plataformas, aquí no se muestran campañas electorales ni publicidad de terceros dentro de la aplicación. El espacio de avisos lo controlas tú.', when:'Política del producto'},
+  {id:'n3', t:'Recuerda: no es receta electrónica certificada', ic:'#i-alert', d:'Una imagen de firma no equivale a firma digital (Ley 27269). Para actos que exijan firma digital, usa tu certificado de entidad acreditada.', when:'Recordatorio legal'},
+  {id:'n4', t:'Campos obligatorios DIGEMID', ic:'#i-info', d:'Dirección y teléfono del consultorio, medicamento en DCI, concentración, forma farmacéutica, dosis, frecuencia y duración. Revísalos en Ayuda legal.', when:'Guía rápida'}
+];
+function renderNotices(){
+  const c=$('#noticesList'); if(!c) return;
+  const read = LS.get(dataKey('notices'), []) || [];
+  c.innerHTML = NOTICES.map(n=>{
+    const isRead = read.includes(n.id);
+    return `<div class="notice" style="opacity:${isRead?0.62:1}">
+      <div class="nic"><svg><use href="${n.ic}"/></svg></div>
+      <div style="flex:1">
+        <div class="row" style="gap:8px"><h5>${esc(n.t)}</h5>${isRead?'<span class="badge badge-line" style="font-size:9.5px">Leído</span>':'<span class="badge badge-soft" style="font-size:9.5px">Nuevo</span>'}</div>
+        <p>${esc(n.d)}</p><div class="when">${esc(n.when)}</div>
+      </div>
+      ${isRead?'':`<button class="btn btn-ghost btn-sm" data-read="${n.id}">Leído</button>`}
+    </div>`;
+  }).join('');
+  $$('#noticesList [data-read]').forEach(b=>b.onclick=()=>{
+    const read2 = LS.get(dataKey('notices'), []) || [];
+    read2.push(b.getAttribute('data-read')); LS.set(dataKey('notices'), read2); renderNotices();
+  });
+}
+$('#btnReadAll').onclick = ()=>{
+  LS.set(dataKey('notices'), NOTICES.map(n=>n.id)); renderNotices(); toast('ok','Avisos marcados','');
+};
+
+/* ==================== FAB: vista previa móvil ==================== */
+function openPreviewModal(){
+  const emitted = ST.lastEmitted;
+  const r = emitted || readForm();
+  const draft = !emitted;
+  openModal(`<div class="modal-card wide">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+      <div><h3 style="font-size:14.5px">${draft?'Vista previa (borrador)':'Receta '+esc(r.code)}</h3>
+        <p class="small mut">${draft?'Aún no emitida — sin código de verificación':'Documento emitido y verificado'}</p></div>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()" aria-label="Cerrar"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+    </div>
+    <div style="padding:14px;background:var(--surface-2);max-height:68vh;overflow:auto;display:grid;place-items:center">
+      ${renderSheet(r,{draft:draft})}
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      <button class="btn btn-ghost" id="fpQr"><svg><use href="#i-qr"/></svg> QR</button>
+      <button class="btn btn-ok" id="fpWa"><svg><use href="#i-share"/></svg> WhatsApp</button>
+      <button class="btn btn-primary" id="fpPdf"><svg><use href="#i-down"/></svg> PDF</button>
+    </div>
+  </div>`);
+  $('#fpPdf').onclick = ()=>{ closeModal(); $('#btnPreviewPdf').click(); };
+  $('#fpWa').onclick  = ()=>{ closeModal(); $('#btnPreviewShare').click(); };
+  $('#fpQr').onclick  = ()=>{ closeModal(); $('#btnPreviewQr').click(); };
+}
+const fab=$('#fabPreview'); if(fab) fab.onclick = openPreviewModal;
+
+/* ==================== PWA: service worker ==================== */
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{ /* file:// o contexto restringido: la app funciona igual */ });
+  });
+}
+
+/* ==================== Arranque ==================== */
+(function boot(){
+  const theme = LS.get(K.theme,'light') || 'light';
+  applyTheme(theme);
+  $('#pFecha').value = new Date().toISOString().slice(0,10);
+
+  if(!STORAGE_OK){ setTimeout(warnNoStorage, 900); }
+
+  const sess = LS.get(K.session,null);
+  const email = typeof sess==='string' ? sess : (sess && sess.email);
+  if(email){
+    const users = LS.get(K.users,{});
+    if(users[email]){ startSession(users[email]); return; }
+  }
+  setAuthTab('login');
+})();
+
+})();
+</script>
+</body>
+</html>

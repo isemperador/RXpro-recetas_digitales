@@ -1,0 +1,10 @@
+# Cloudflare Pages · redirecciones
+# © 2026 isemperadorBR
+/            /index.html   200
+/login       /index.html   200
+/dashboard   /index.html   200
+/historial   /index.html   200
+/perfil      /index.html   200
+/ajustes     /index.html   200
+/app         /index.html   200
+/*           /index.html   404

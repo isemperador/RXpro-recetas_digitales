@@ -1,0 +1,32 @@
+MIT License
+Copyright (c) 2026 isemperadorBR
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+NOTA SOBRE EL USO CLÍNICO (no forma parte de la licencia MIT)
+-------------------------------------------------------------------------------
+Este software genera documentos de prescripción legibles y trazables, pero NO
+constituye una receta electrónica con firma digital certificada conforme a la
+Ley N.° 27269 (Perú) ni a las RM 351-2020-MINSA / RM 968-2021-MINSA.
+Una imagen de firma no equivale a una firma digital. El usuario es responsable
+del contenido clínico y legal de cada receta que emita.
+-------------------------------------------------------------------------------
+Componente de terceros: qrcode-generator de Kazuhiko Arase (licencia MIT),
+incluido dentro de index.html.

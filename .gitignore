@@ -1,0 +1,25 @@
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editores ---
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- Dependencias / builds (no aplican hoy, previenen basura futura) ---
+node_modules/
+dist/
+build/
+.cache/
+*.log
+
+# --- Datos locales (NUNCA subir recetas ni firmas) ---
+*.local
+.env
+.env.*
+backups/
+respaldo*.json
+rxpro-respaldo*.json

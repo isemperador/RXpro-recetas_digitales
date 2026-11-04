@@ -1,0 +1,3 @@
+# Rx Pro · © 2026 isemperadorBR
+User-agent: *
+Allow: /
