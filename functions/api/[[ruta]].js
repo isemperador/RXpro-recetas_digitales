@@ -31,18 +31,22 @@ function limpio(v, max, soloDigitos) {
 const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e || '');
 const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
 
-/* PBKDF2-SHA256 · 210 000 iteraciones (recomendación OWASP 2023 para SHA-256) */
+/* PBKDF2-SHA256 · 100 000 iteraciones.
+   Ojo: Cloudflare Workers NO admite más de 100 000 (el límite es del runtime,
+   no nuestro). Con 100 000 y contraseñas de 8+ caracteres el cifrado sigue
+   siendo sólido para este uso.                                              */
+const ITER = 100000;
 async function hashPass(pass, salt) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 210000, hash: 'SHA-256' }, key, 256
+    { name: 'PBKDF2', salt: enc.encode(salt), iterations: ITER, hash: 'SHA-256' }, key, 256
   );
   return b64(bits);
 }
 async function nuevaPass(pass) {
   const salt = b64(crypto.getRandomValues(new Uint8Array(16))).replace(/[^A-Za-z0-9]/g, '').slice(0, 22);
-  return '210000$' + salt + '$' + (await hashPass(pass, salt));
+  return ITER + '$' + salt + '$' + (await hashPass(pass, salt));
 }
 async function comprobarPass(pass, guardado) {
   const [it, salt, hash] = String(guardado || '').split('$');
