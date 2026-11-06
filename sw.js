@@ -5,7 +5,7 @@
    La app funciona sin conexión; el SW solo acelera el arranque
    y permite usarla con el celular sin señal.
    ============================================================ */
-const VERSION = 'rxpro-v1.3.0';
+const VERSION = 'rxpro-v1.5.0';
 const CACHE = 'rxpro-' + VERSION;
 
 const SHELL = [

@@ -148,7 +148,7 @@ Luego abre <http://localhost:8080>.
 | Rutas amigables | `_redirects` |
 
 Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
-`const VERSION = 'rxpro-v1.3.0';`
+`const VERSION = 'rxpro-v1.5.0';`
 
 ---
 
@@ -171,9 +171,11 @@ medicamentos. Así no se administra una base de datos de salud (Ley 29733).
    → nombre `rxpro-db`.
 2. **Crear la tabla** — entra a la base → pestaña **Consola** → pega el contenido
    de `d1-schema.sql` → *Ejecutar*. Debe decir «Ejecutado».
-3. **Publicar la función** — el repo ya trae `functions/api/registro.js`.
+3. **Publicar la API** — el repo ya trae `functions/api/[[ruta]].js`.
    (En el uploader web de GitHub: *Add file → Create new file* → escribe
-   `functions/api/registro.js` en el nombre y pega el archivo.)
+   `functions/api/[[ruta]].js` en el nombre y pega el archivo.
+   Los corchetes del nombre son parte de la ruta: hacen que ese único archivo
+   atienda `/api/registro`, `/api/auth`, `/api/perfil` y `/api/historial`.)
 4. **Conectar** — Cloudflare → tu proyecto de Pages → *Settings* → **Functions**
    → *D1 database bindings* → *Add binding*:
    - Variable name: `RX_DB`  ← **exactamente así**
@@ -198,11 +200,40 @@ SELECT fecha, COUNT(*) AS recetas FROM recetas GROUP BY fecha ORDER BY fecha DES
 
 Para anular una receta: `UPDATE recetas SET estado='anulada' WHERE codigo='RX-…';`
 
-### Nota de privacidad
+### Cuentas en línea y varios dispositivos
 
-Al estar alojada fuera del país, la base solo contiene datos no sensibles
-(código, huella, CMP, fecha). Mientras no añadas nombres de pacientes, no
-necesitas consentimiento adicional ni medidas especiales de la Ley 29733.
+Con la base conectada, la cuenta del médico vive en el servidor:
+
+- **Entra desde cualquier teléfono o computadora** con su correo y contraseña:
+  ve el mismo perfil (firma, logo, datos) y el mismo historial.
+- En **Mi perfil → Cuenta y dispositivos** aparece el estado
+  («Sincronizada» / «Solo en este dispositivo»).
+- **Crear cuenta a un colega**: botón en esa misma tarjeta. Se crea con el
+  correo del médico y una contraseña temporal; él la cambia al entrar.
+  Después puedes subirle su firma y logo desde tu equipo.
+- **La contraseña la controla el administrador.** Si la cuenta la creaste tú
+  para un colega, *esa persona no puede cambiar su contraseña*: el botón no
+  aparece y, aunque lo intentara por la API, el servidor responde
+  `403 sin_permiso`. Tú la cambias desde **Mis cuentas**.
+- **Mis cuentas**: lista de las cuentas que administras, con un botón para
+  asignarles una contraseña nueva cuando quieras.
+- Las contraseñas **nunca** se guardan en texto plano, y la sesión caduca a
+  los 30 días.
+
+### Privacidad: dos niveles
+
+| Tabla | Contenido | Quién la lee |
+|---|---|---|
+| `recetas` | código, huella, CMP, fecha | cualquiera (verificación pública) |
+| `medicos` | nombre, correo, CMP, firma, logo, quién la administra | solo el dueño de la sesión |
+| `recetas_medico` | historial clínico (incluye paciente) | solo el dueño de la sesión |
+
+⚠️ El historial sincronizado **sí contiene datos del paciente**, porque es
+justamente lo que el médico necesita ver desde otro equipo. Es información
+sensible bajo la Ley 29733: la base está alojada fuera del país y solo se
+sirve con la sesión del propio médico. Si prefieres que nada clínico salga
+del dispositivo, basta con no conectar la base: la app sigue funcionando de
+forma autónoma.
 
 ---
 ## ✅ Checklist antes de compartir el enlace

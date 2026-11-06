@@ -557,6 +557,7 @@ body.is-verify #verify{display:block}
     <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
     <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14h1M14 20h3M20 17v4"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
@@ -904,6 +905,18 @@ body.is-verify #verify{display:block}
               </div>
 
               <div class="row"><button class="btn btn-primary btn-lg" id="btnSaveProfile" type="button"><svg><use href="#i-check"/></svg> Guardar cambios</button></div>
+
+              <div class="card card-pad" id="cardCuenta">
+                <div class="section-step"><span class="n">3</span> Cuenta y dispositivos</div>
+                <p class="hint" id="cuentaEstado" style="margin-bottom:12px">Comprobando la conexión…</p>
+                <div class="row" style="flex-wrap:wrap;gap:8px">
+                  <button class="btn btn-ghost btn-sm" type="button" id="btnCambiarClave"><svg><use href="#i-shield"/></svg> Cambiar mi contraseña</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="btnCrearColega"><svg><use href="#i-user"/></svg> Crear cuenta a un colega</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="btnMisCuentas"><svg><use href="#i-lock"/></svg> Mis cuentas</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="btnRestablecerClave" style="display:none"></button>
+                </div>
+                <div class="up-note" style="margin-top:12px"><svg><use href="#i-info"/></svg><span>Con la cuenta en línea, el perfil (firma y logo) y el historial se ven igual desde cualquier teléfono o computadora. <b>La contraseña de las cuentas que tú creas solo la controlas tú</b>: el médico no puede cambiarla.</span></div>
+              </div>
             </div>
 
             <div class="stack">
@@ -3472,7 +3485,7 @@ function closeModal(){ const m=$('#modal'); m.classList.remove('on'); m.innerHTM
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 /* ==================== Estado ==================== */
-const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme'};
+const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme', token:'rxpro.token', nube:'rxpro.nube'};
 const DEF_SETTINGS = {color:'#0b3a6f', font:'sans', density:'normal', showDx:true, showDemo:true, showQr:true, draft:true, legal:true, copyright:true};
 const COLORES = ['#0b3a6f','#0f7a4d','#7a1f2b','#4a2f7a','#0a5fa8','#8a5a00','#1f2937','#a8324a'];
 
@@ -3480,11 +3493,15 @@ let ST = { user:null, recs:[], settings:{...DEF_SETTINGS}, draft:null, lastEmitt
 
 function dataKey(suffix){ return `rxpro.${suffix}.${ST.user.email}`; }
 function saveRecs(){ LS.set(dataKey('rec'), ST.recs); updateCounts(); }
-function saveSettings(){ LS.set(dataKey('set'), ST.settings); }
+function saveSettings(){
+  LS.set(dataKey('set'), ST.settings);
+  if(typeof syncPerfil === 'function') syncPerfil();
+}
 function saveUser(){
   const users = LS.get(K.users,{});
   users[ST.user.email] = ST.user;
   LS.set(K.users, users);
+  if(typeof syncPerfil === 'function') syncPerfil();
 }
 
 /* ==================== Autenticación ==================== */
@@ -3504,8 +3521,12 @@ $$('[data-go-login]').forEach(b=>b.onclick=()=>setAuthTab('login'));
 function badField(id,bad){ const f=$('#'+id); if(f) f.classList.toggle('bad', !!bad); }
 const emailOk = v=>/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);
 
+let authBusy = false;
 $('#formLogin').addEventListener('submit', async e=>{
   e.preventDefault();
+  if(authBusy) return;
+  authBusy = true;
+  setTimeout(()=>{ authBusy = false; }, 4000);
   const email = nz($('#lgEmail').value).toLowerCase();
   const pass  = $('#lgPass').value;
   let bad=false;
@@ -3513,9 +3534,33 @@ $('#formLogin').addEventListener('submit', async e=>{
   if(pass.length<6){badField('fLoginPass',true);bad=true;} else badField('fLoginPass',false);
   if(bad) return;
 
+  const btn = e.target.querySelector('button[type=submit]');
+  if(btn) btn.disabled = true;
+
+  /* 1) Si el sitio tiene base de datos, la cuenta se busca en línea:
+        así funciona desde cualquier teléfono o computadora.          */
+  const enLinea = await apiPost('auth', {accion:'login', email, pass});
+  if(enLinea && enLinea.ok && enLinea.token){
+    HAY_API = true;
+    setToken(enLinea.token);
+    const u = perfilDesdeNube(enLinea.perfil, email);
+    LS.set(K.session, $('#lgRemember').checked ? email : {email, tmp:true});
+    await arrancarConNube(u);
+    if(btn) btn.disabled = false;
+    return;
+  }
+  if(enLinea && (enLinea.error === 'clave_mala' || enLinea.error === 'no_existe')){
+    if(btn) btn.disabled = false;
+    if(enLinea.error === 'clave_mala'){ badField('fLoginPass',true); toast('bad','Contraseña incorrecta','Verifica e inténtalo otra vez.'); }
+    else { badField('fLoginEmail',true); toast('bad','Cuenta no encontrada','Revisa el correo o crea la cuenta en «Crear cuenta».'); }
+    return;
+  }
+
+  /* 2) Sin base de datos (o sin internet): modo local, como siempre. */
   const users = LS.get(K.users,{});
   const u = users[email];
   const h = await sha256('rxpro$'+pass+'$'+email);
+  if(btn) btn.disabled = false;
   if(!u){ badField('fLoginEmail',true); toast('bad','Cuenta no encontrada','Regístrate primero en esta pestaña.'); return; }
   if(u.pass!==h){ badField('fLoginPass',true); toast('bad','Contraseña incorrecta','Verifica e inténtalo otra vez.'); return; }
 
@@ -3525,6 +3570,9 @@ $('#formLogin').addEventListener('submit', async e=>{
 
 $('#formSignup').addEventListener('submit', async e=>{
   e.preventDefault();
+  if(authBusy) return;
+  authBusy = true;
+  setTimeout(()=>{ authBusy = false; }, 4000);
   const name = nz($('#suName').value), email = nz($('#suEmail').value).toLowerCase();
   const p1 = $('#suPass').value, p2 = $('#suPass2').value, cmp = nz($('#suCmp').value);
   let bad=false;
@@ -3536,19 +3584,46 @@ $('#formSignup').addEventListener('submit', async e=>{
   if(!$('#suTerms').checked){ $('#suTermsErr').style.display='block'; bad=true; } else $('#suTermsErr').style.display='none';
   if(bad) return;
 
-  const users = LS.get(K.users,{});
-  if(users[email]){ toast('bad','Ese correo ya tiene cuenta','Inicia sesión en la otra pestaña.'); return; }
+  const btn = e.target.querySelector('button[type=submit]');
+  if(btn) btn.disabled = true;
 
-  const u = {
-    email, pass: await sha256('rxpro$'+p1+'$'+email),
-    nombre:name, cmp, especialidad:nz($('#suSpec').value)||'Medicina General',
-    telefono:nz($('#suPhone').value), rne:nz($('#suRne').value), direccion:nz($('#suAddr').value),
-    clinica:'', firma:'', logo:'', createdAt:new Date().toISOString()
+  const perfil = {
+    email, nombre:name, cmp,
+    especialidad:nz($('#suSpec').value)||'Medicina General',
+    telefono:nz($('#suPhone').value), rne:nz($('#suRne').value),
+    direccion:nz($('#suAddr').value), clinica:'', firma:'', logo:''
   };
+
+  /* Cuenta en línea (funciona desde cualquier dispositivo) */
+  const enLinea = await apiPost('auth', Object.assign({accion:'signup', pass:p1, propietario:email}, perfil));
+  if(enLinea && enLinea.ok && enLinea.token){
+    HAY_API = true;
+    setToken(enLinea.token);
+    const u = perfilDesdeNube(enLinea.perfil, email);
+    LS.set(K.session, email);
+    toast('ok','Cuenta creada','Bienvenido a Rx Pro. Podrás entrar desde cualquier dispositivo.');
+    await arrancarConNube(u);
+    if(btn) btn.disabled = false;
+    return;
+  }
+  if(enLinea && enLinea.error === 'email_en_uso'){
+    if(btn) btn.disabled = false;
+    toast('bad','Ese correo ya tiene cuenta','Inicia sesión en la otra pestaña.'); return;
+  }
+
+  /* Modo local (sin base de datos conectada) */
+  const users = LS.get(K.users,{});
+  if(users[email]){ if(btn) btn.disabled = false; toast('bad','Ese correo ya tiene cuenta','Inicia sesión en la otra pestaña.'); return; }
+
+  const u = Object.assign({}, perfil, {
+    pass: await sha256('rxpro$'+p1+'$'+email),
+    createdAt:new Date().toISOString()
+  });
   users[email]=u; LS.set(K.users, users);
   LS.set(K.session, email);
   toast('ok','Cuenta creada','Bienvenido a Rx Pro.');
   startSession(u);
+  if(btn) btn.disabled = false;
 });
 
 $('#btnForgot').onclick = ()=>{
@@ -3578,7 +3653,48 @@ function startSession(u){
   renderNotices();
   go('nueva');
 }
+/* Convierte el perfil que devuelve la base de datos al formato local */
+function perfilDesdeNube(p, email){
+  p = p || {};
+  return {
+    email: p.email || email, nombre:p.nombre || '', cmp:p.cmp || '', rne:p.rne || '',
+    propietario: p.propietario || '',
+    especialidad:p.especialidad || 'Medicina General', telefono:p.telefono || '',
+    direccion:p.direccion || '', clinica:p.clinica || '',
+    firma:p.firma || '', logo:p.logo || '',
+    pass:'', createdAt:p.creadoEn || new Date().toISOString(), enNube:true
+  };
+}
+/* Arranca la sesión trayendo perfil e historial de la base de datos */
+async function arrancarConNube(u){
+  const remoto = await apiGet('perfil');
+  if(remoto && remoto.ok && remoto.perfil){
+    const p = perfilDesdeNube(remoto.perfil, u.email);
+    u = Object.assign({}, u, p);
+    if(remoto.perfil.ajustes) LS.set('rxpro.set.' + u.email, Object.assign({}, DEF_SETTINGS, remoto.perfil.ajustes));
+  }
+  const cache = LS.get(K.users, {}); cache[u.email] = u; LS.set(K.users, cache);
+  startSession(u);
+  sincronizarHistorial();
+}
+/* Baja el historial de la nube y lo mezcla con lo que haya en este equipo */
+async function sincronizarHistorial(){
+  const r = await apiGet('historial');
+  if(!r || !r.ok || !Array.isArray(r.recetas)) return;
+  const locales = ST.recs.slice();
+  const porId = new Map();
+  r.recetas.forEach(x=>porId.set(x.id, x));
+  locales.forEach(x=>{ if(!porId.has(x.id)) porId.set(x.id, x); });
+  const merged = Array.from(porId.values()).sort((a,b)=> (b.creadaEn||'').localeCompare(a.creadaEn||''));
+  ST.recs = merged;
+  LS.set(dataKey('rec'), ST.recs);
+  renderHistory();
+  const nuevos = locales.filter(x=>!r.recetas.some(y=>y.id===x.id));
+  if(nuevos.length) apiPost('historial', {recetas: nuevos});
+}
 function logout(){
+  apiPost('auth', {accion:'logout'});
+  setToken('');
   LS.del(K.session);
   ST = { user:null, recs:[], settings:{...DEF_SETTINGS}, draft:null, lastEmitted:null };
   $('#app').classList.remove('on');
@@ -4027,6 +4143,76 @@ function verifyUrl(r){
   while(parts.length && !parts[parts.length-1]) parts.pop();
   return base + '#v=' + parts.join('/');
 }
+/* ==================== Cuenta en línea (Cloudflare D1) ====================
+   El perfil del médico (nombre, CMP, firma, logo, ajustes) y su historial de
+   recetas viven en la base de datos, así que puede entrar desde cualquier
+   dispositivo.  Sin base de datos conectada, todo sigue funcionando con el
+   almacenamiento local del navegador (modo autónomo).                      */
+const API = location.pathname.replace(/[^/]*$/,'') + 'api/';
+function apiUrl(ruta){ return API + ruta; }
+function token(){ return LS.get(K.token,'') || ''; }
+function setToken(t){ if(t) LS.set(K.token, t); else LS.del(K.token); }
+function conSesion(extra){
+  const h = Object.assign({'Content-Type':'application/json'}, extra||{});
+  const t = token(); if(t) h.Authorization = 'Bearer ' + t;
+  return h;
+}
+async function apiPost(ruta, body, extra){
+  try{
+    const r = await fetch(apiUrl(ruta), {method:'POST', cache:'no-store', headers:conSesion(extra), body:JSON.stringify(body)});
+    const ct = r.headers.get('content-type')||'';
+    if(ct.indexOf('application/json') < 0) return {ok:false, error:'sin_api'};
+    return await r.json();
+  }catch(e){ return {ok:false, error:'sin_red'}; }
+}
+async function apiGet(ruta){
+  try{
+    const r = await fetch(apiUrl(ruta), {cache:'no-store', headers:conSesion()});
+    const ct = r.headers.get('content-type')||'';
+    if(ct.indexOf('application/json') < 0) return {ok:false, error:'sin_api'};
+    return await r.json();
+  }catch(e){ return {ok:false, error:'sin_red'}; }
+}
+/* ¿la app está publicada con la API y la base conectada? */
+let HAY_API = false;
+async function detectarApi(){
+  const r = await apiGet('registro?codigo=RX-00000000-000');
+  HAY_API = !!(r && (r.error === 'sin_base' ? false : (r.ok || r.error === 'codigo_invalido')));
+  return HAY_API;
+}
+const errTxt = e => ({
+  sin_api:'El sitio no tiene la API activada.',
+  sin_base:'La base de datos no está conectada.',
+  sin_red:'No hay conexión a internet.',
+  email_en_uso:'Ese correo ya tiene una cuenta.',
+  clave_mala:'La contraseña no es correcta.',
+  clave_corta:'La contraseña debe tener al menos 8 caracteres.',
+  no_existe:'No existe una cuenta con ese correo.',
+  email_invalido:'El correo no es válido.',
+  faltan_datos:'Faltan el nombre o el CMP.',
+  sin_sesion:'Tu sesión caducó. Vuelve a iniciar sesión.'
+}[e] || 'No se pudo completar la operación.');
+
+/* Guarda el perfil en la nube (silencioso: si falla, se reintenta luego) */
+let syncPendiente = null;
+function syncPerfil(){
+  if(!HAY_API || !token() || !ST.user) return;
+  clearTimeout(syncPendiente);
+  syncPendiente = setTimeout(async ()=>{
+    const u = ST.user;
+    await apiPost('perfil', {
+      nombre:u.nombre, cmp:u.cmp, rne:u.rne, especialidad:u.especialidad,
+      telefono:u.telefono, direccion:u.direccion, clinica:u.clinica,
+      firma:u.firma, logo:u.logo, ajustes:ST.settings
+    });
+  }, 700);
+}
+/* Manda una receta al historial en la nube */
+async function syncReceta(rec){
+  if(!HAY_API || !token() || !rec) return;
+  await apiPost('historial', {receta: rec});
+}
+
 /* ==================== Registro central (Cloudflare D1) ====================
    Si el sitio está publicado en Cloudflare Pages con la función api/registro,
    cada receta emitida se anota en la base de datos D1 (solo código, huella, CMP
@@ -4201,6 +4387,7 @@ $('#btnEmit').onclick = async ()=>{
   ST.recs.unshift(rec);
   saveRecs();
   dbRegistrar(rec);            // anota la receta en D1 (si el sitio lo tiene activo)
+  syncReceta(rec);             // la guarda en el historial en línea del médico
   ST.lastEmitted = rec;
   LS.set(dataKey('lastEmit'), rec);
   const b=$('#previewBadge'); if(b){b.textContent='Emitida · '+code;b.className='badge badge-ok';}
@@ -4486,6 +4673,7 @@ function confirmDelete(r){
 
 /* ==================== Perfil ==================== */
 function paintProfile(){
+  setTimeout(pintarEstadoCuenta, 30);
   if(!ST.user) return;
   $('#prName').value  = ST.user.nombre||'';
   $('#prCmp').value   = ST.user.cmp||'';
@@ -4512,6 +4700,116 @@ function paintProfile(){
   $('#btnDelLogo').style.display = ST.user.logo?'':'none';
   renderProfilePreview();
 }
+/* ==================== Cuenta y dispositivos ==================== */
+function pintarEstadoCuenta(){
+  const el = $('#cuentaEstado'); if(!el) return;
+  const enNube = !!(HAY_API && token());
+  el.innerHTML = enNube
+    ? '<span style="color:var(--ok);font-weight:700">● Sincronizada</span> — tu perfil y tus recetas se guardan en la nube y se ven desde cualquier dispositivo.'
+    : '<span style="color:var(--warn);font-weight:700">● Solo en este dispositivo</span> — no hay base de datos conectada (o no iniciaste sesión en línea). Todo funciona, pero el historial no viaja a otros equipos.';
+  const b1 = $('#btnCrearColega'); if(b1) b1.disabled = !enNube;
+  /* La contraseña de una cuenta creada por su administrador NO se puede cambiar
+     desde dentro: solo la controla quien la creó. */
+  const u = ST.user || {};
+  const administradaPorOtro = !!(u.propietario && u.propietario !== u.email);
+  const b2 = $('#btnCambiarClave'); if(b2) b2.style.display = administradaPorOtro ? 'none' : '';
+  const b3 = $('#btnRestablecerClave'); if(b3) b3.style.display = administradaPorOtro ? 'none' : 'none';
+  const b4 = $('#btnMisCuentas'); if(b4) b4.disabled = !enNube || administradaPorOtro;
+}
+$('#btnMisCuentas').onclick = async ()=>{
+  if(!(HAY_API && token())) return;
+  const r = await apiPost('auth', {accion:'mios'});
+  if(!(r && r.ok)){ toast('bad','No se pudo consultar', errTxt(r && r.error)); return; }
+  const lista = r.cuentas || [];
+  openModal(`<div class="modal-card"><h3>Cuentas que administro</h3>
+    <p class="small mut">Tú controlas la contraseña de estas cuentas. El médico que las usa no puede cambiarla por su cuenta.</p>
+    ${lista.length ? lista.map((c,i)=>`
+      <div class="verify-box" style="margin-top:10px">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="min-width:0">
+            <div style="font-weight:750;font-size:13px">${esc(c.nombre||'(sin nombre)')}</div>
+            <div class="small mut" style="word-break:break-all">${esc(c.email)}</div>
+            <div class="small mut">CMP ${esc(c.cmp||'—')}${c.especialidad?' · '+esc(c.especialidad):''}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" data-cuenta="${esc(c.email)}" style="flex:none">Cambiar clave</button>
+        </div>
+      </div>`).join('') : '<p class="small">Todavía no has creado cuentas para colegas.</p>'}
+    <div class="modal-acts" style="grid-template-columns:1fr"><button class="btn btn-ghost" onclick="closeModal()">Cerrar</button></div>
+  </div>`);
+  $$('[data-cuenta]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const email = btn.getAttribute('data-cuenta');
+      const nueva = prompt('Nueva contraseña para '+email+' (mínimo 8 caracteres):');
+      if(!nueva) return;
+      if(nueva.length < 8){ toast('bad','Contraseña corta','Usa al menos 8 caracteres.'); return; }
+      apiPost('auth', {accion:'restablecer', email, nueva}).then(x=>{
+        if(x && x.ok) toast('ok','Contraseña actualizada','Entrégasela al médico.', 7000);
+        else toast('bad','No se pudo cambiar', errTxt(x && x.error));
+      });
+    };
+  });
+};
+$('#btnCambiarClave').onclick = ()=>{
+  const u = ST.user || {};
+  if(u.propietario && u.propietario !== u.email){
+    openModal(`<div class="modal-card"><h3>Contraseña administrada</h3>
+      <p>Esta cuenta fue creada por su administrador y la contraseña <b>solo la controla él</b>. Si necesitas cambiarla, pídesela a quien te dio el acceso.</p>
+      <div class="modal-acts"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div></div>`);
+    return;
+  }
+  if(!(HAY_API && token())){
+    openModal(`<div class="modal-card"><h3>Cambiar contraseña</h3>
+      <p>Esta copia funciona sin base de datos, así que la contraseña vive solo en este navegador. Si la olvidaste, crea una cuenta nueva con otro correo: tus recetas anteriores siguen guardadas.</p>
+      <div class="modal-acts"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div></div>`);
+    return;
+  }
+  openModal(`<div class="modal-card"><h3>Cambiar mi contraseña</h3>
+    <p class="small mut">Se guarda cifrada en la base de datos. Nadie más puede verla.</p>
+    <div class="field"><label for="kpActual">Contraseña actual</label><input class="control" type="password" id="kpActual" autocomplete="current-password"/></div>
+    <div class="field"><label for="kpNueva">Contraseña nueva <span class="opt">(mín. 8)</span></label><input class="control" type="password" id="kpNueva" autocomplete="new-password"/></div>
+    <div class="field"><label for="kpNueva2">Repetir la nueva</label><input class="control" type="password" id="kpNueva2" autocomplete="new-password"/></div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="kpOk">Cambiar</button></div>
+  </div>`);
+  $('#kpOk').onclick = async ()=>{
+    const actual = $('#kpActual').value, nueva = $('#kpNueva').value, n2 = $('#kpNueva2').value;
+    if(nueva.length < 8){ toast('bad','Contraseña corta','Usa al menos 8 caracteres.'); return; }
+    if(nueva !== n2){ toast('bad','No coinciden','Revisa la repetición.'); return; }
+    const r = await apiPost('auth', {accion:'clave', actual, nueva});
+    if(r && r.ok){ closeModal(); toast('ok','Contraseña cambiada','Úsala la próxima vez que inicies sesión.'); }
+    else toast('bad','No se pudo cambiar', errTxt(r && r.error));
+  };
+};
+$('#btnCrearColega').onclick = ()=>{
+  if(!(HAY_API && token())) return;
+  openModal(`<div class="modal-card"><h3>Crear cuenta a un colega</h3>
+    <p class="small">Crea la cuenta con <b>su correo</b> y una <b>contraseña temporal</b>. Entrégasela; él podrá cambiarla en «Cambiar mi contraseña». Después podrás subirle su firma y logo desde este equipo.</p>
+    <div class="field"><label for="ccEmail">Correo del médico</label><input class="control" id="ccEmail" type="email" placeholder="doctor@correo.com"/></div>
+    <div class="field"><label for="ccNombre">Nombre completo</label><input class="control" id="ccNombre" placeholder="Nombres y apellidos"/></div>
+    <div class="grid2">
+      <div class="field"><label for="ccCmp">CMP</label><input class="control" id="ccCmp" inputmode="numeric"/></div>
+      <div class="field"><label for="ccSpec">Especialidad</label><input class="control" id="ccSpec" placeholder="Medicina General"/></div>
+    </div>
+    <div class="field"><label for="ccPass">Contraseña temporal <span class="opt">(mín. 8)</span></label><input class="control" id="ccPass" value="RxPro-2026"/></div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="ccOk">Crear cuenta</button></div>
+  </div>`);
+  $('#ccOk').onclick = async ()=>{
+    const email = nz($('#ccEmail').value).toLowerCase(), nombre = nz($('#ccNombre').value);
+    const cmp = nz($('#ccCmp').value), esp = nz($('#ccSpec').value)||'Medicina General';
+    const pass = $('#ccPass').value;
+    if(!emailOk(email)){ toast('bad','Correo inválido','Revisa el correo del médico.'); return; }
+    if(!nombre || !cmp){ toast('bad','Faltan datos','El nombre y el CMP son obligatorios.'); return; }
+    if(pass.length < 8){ toast('bad','Contraseña corta','Usa al menos 8 caracteres.'); return; }
+    const btn = $('#ccOk'); btn.disabled = true;
+    const r = await apiPost('auth', {accion:'signup', email, pass, nombre, cmp, especialidad:esp, propietario: ST.user.email});
+    btn.disabled = false;
+    if(!(r && r.ok)){ toast('bad','No se pudo crear', errTxt(r && r.error)); return; }
+    closeModal();
+    prompt('Cuenta creada. Copia estos datos y entrégaselos al médico:', `correo: ${email}
+contraseña temporal: ${pass}`);
+    toast('ok','Cuenta creada', 'Entrégale el correo y la contraseña temporal.', 8000);
+  };
+};
+
 $('#btnSaveProfile').onclick = ()=>{
   if(!nz($('#prName').value) || !nz($('#prCmp').value)){
     toast('bad','Datos incompletos','Nombre y CMP son obligatorios en toda receta.'); return;
@@ -4749,10 +5047,19 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
   }
 
   if(!STORAGE_OK){ setTimeout(warnNoStorage, 900); }
+  detectarApi();                      // ¿hay base de datos en este sitio?
 
   const sess = LS.get(K.session,null);
   const email = typeof sess==='string' ? sess : (sess && sess.email);
   if(email){
+    /* con sesión en línea guardada, se recupera el perfil de la base */
+    if(token()){
+      arrancarConNube(perfilDesdeNube(LS.get(K.users,{})[email], email)).catch(()=>{
+        const users = LS.get(K.users,{});
+        if(users[email]) startSession(users[email]);
+      });
+      return;
+    }
     const users = LS.get(K.users,{});
     if(users[email]){ startSession(users[email]); return; }
   }
