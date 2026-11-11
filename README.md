@@ -148,7 +148,7 @@ Luego abre <http://localhost:8080>.
 | Rutas amigables | `_redirects` |
 
 Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
-`const VERSION = 'rxpro-v1.6.0';`
+`const VERSION = 'rxpro-v1.7.1';`
 
 ---
 
@@ -200,6 +200,31 @@ SELECT fecha, COUNT(*) AS recetas FROM recetas GROUP BY fecha ORDER BY fecha DES
 
 Para anular una receta: `UPDATE recetas SET estado='anulada' WHERE codigo='RX-…';`
 
+### Comprobar qué versión está publicada
+
+Abre en el navegador: **`tudominio/api/version`**
+
+```json
+{"ok":true,"api":"v1.6.2","rutas":["registro","auth","perfil","historial"],"base":true}
+```
+
+- Si sale `v1.6.2` y `"base":true` → todo correcto. (`v1.6.1` también funciona,
+  pero le falta el arreglo del registro de cuentas: ver abajo.)
+- Si devuelve HTML o 404 → la carpeta `functions/` no se está publicando.
+- Si sale otra versión → el archivo `functions/api/[[ruta]].js` quedó viejo.
+
+> ⚠️ **Cuidado con *Retry deployment*:** vuelve a compilar **el mismo commit**, no el
+> último. Si subiste cambios y no aparecen, haz un commit nuevo (cualquier
+> cambio minúsculo) o usa *Deploy latest commit*.
+
+### «Espera, ¿qué versión estoy viendo?»
+
+En la pantalla de inicio de sesión, **debajo del aviso de copyright**, aparece
+la versión de la app (por ejemplo `Rx Pro · v1.7.1`). Si ahí ves `Rx Pro` sin
+número, el navegador está usando una copia vieja en caché.
+
+Y para el servidor, abre **`/api/version`**.
+
 ### Control de acceso: nadie entra sin tu autorización
 
 - **La primera cuenta** que se cree en el sistema es la del administrador
@@ -207,9 +232,15 @@ Para anular una receta: `UPDATE recetas SET estado='anulada' WHERE codigo='RX-�
 - **Quien se registre por su cuenta** queda en estado `pendiente`: ve una
   pantalla de espera y **no puede entrar** (el servidor le niega la sesión
   con `403 pendiente`, no basta con esconder botones).
-- Tú los ves en **Mi perfil → Solicitudes**, con un aviso en el menú cuando
-  llega una nueva, y decides **Autorizar** o **Rechazar**.
+- Tú los ves en **Solicitudes** (menú lateral, solo visible para el
+  administrador), con el número en rojo cuando llega una nueva, y decides
+  **Autorizar** o **Rechazar**. Quien se registra ve el mensaje
+  *«Hemos enviado tu solicitud al administrador… Muchas gracias por su espera»*.
 - Las cuentas que **tú creas** para colegas nacen aprobadas.
+- **El modo local ya no es una puerta trasera:** si el sitio está publicado
+  con base de datos, una cuenta que no exista en la nube **no entra**, ni por
+  registro ni por inicio de sesión. Las sesiones guardadas sin token se
+  descartan al arrancar.
 - El enlace del CMP en la página de verificación apunta a
   **«Conoce a tu Médico»** (`conoceatumedico.cmp.org.pe`), donde se puede
   buscar la colegiatura.
@@ -273,4 +304,16 @@ Incluye el generador **qrcode-generator** de Kazuhiko Arase (MIT).
 La nota sobre uso clínico al final del LICENSE no forma parte de la licencia MIT y debe conservarse.
 
 © 2026 **isemperadorBR**. Todos los derechos reservados.
-<!-- deploy 1 -->
+
+### Historial de versiones
+
+| Versión | Qué arregla |
+|---|---|
+| **v1.7.1** | El **registro de cuentas fallaba** (`error_servidor`: *15 values for 14 columns*): el `INSERT` no incluía la columna `rol`. Era la causa real de los mensajes «No se pudo crear la cuenta / No se pudo completar la operación». Además: mensaje de espera nuevo, panel de **Solicitudes** en el menú lateral con contador, el botón ya no aparece para quien no es administrador, los **rechazados** dejan de aparecer como pendientes, y los errores del servidor se muestran con su detalle. |
+| v1.7.0 | El modo local deja de ser una puerta trasera: registro e inicio de sesión nunca caen al modo local si el sitio tiene base de datos. Se muestra la versión en la pantalla de login. |
+| v1.6.1 | Ruta `/api/version` para comprobar qué API está publicada. |
+| v1.6.0 | Control de acceso con aprobación del administrador. |
+
+> **Importante:** `index.html` y `functions/api/[[ruta]].js` deben subirse
+> **juntos**. Si solo subes la página, el servidor viejo no tiene `rol` y el
+> registro responde *«La API del servidor está anticuada»*.
