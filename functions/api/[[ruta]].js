@@ -21,7 +21,7 @@
 
 /* Versión del servidor. Se puede consultar abriendo  /api/version  en el
    navegador: sirve para comprobar de un vistazo qué código está publicado. */
-const API_VERSION = 'v1.6.1';
+const API_VERSION = 'v1.6.2';
 
 const JSON_H = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: JSON_H });
@@ -178,7 +178,7 @@ async function postAuth(env, request) {
 
     const pass = await nuevaPass(String(b.pass));
     await env.RX_DB.prepare(
-      `INSERT INTO medicos (email, pass, nombre, cmp, rne, especialidad, telefono, direccion, clinica, firma, logo, ajustes, propietario, estado)
+      `INSERT INTO medicos (email, pass, nombre, cmp, rne, especialidad, telefono, direccion, clinica, firma, logo, ajustes, propietario, estado, rol)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email, pass,
@@ -258,7 +258,7 @@ async function postAuth(env, request) {
     if (accion === 'pendientes') {
       const { results } = await env.RX_DB.prepare(
         `SELECT email, nombre, cmp, especialidad, telefono, estado, creado_en
-         FROM medicos WHERE estado <> 'aprobado' AND email <> ? ORDER BY creado_en ASC LIMIT 100`
+         FROM medicos WHERE estado = 'pendiente' AND email <> ? ORDER BY creado_en ASC LIMIT 100`
       ).bind(quien).all();
       const { results: todos } = await env.RX_DB.prepare(
         'SELECT email, nombre, cmp, especialidad, estado, creado_en FROM medicos WHERE email <> ? ORDER BY creado_en DESC LIMIT 100'
