@@ -669,6 +669,7 @@ body.is-verify #verify{display:block}
 
     <div class="site-footer" style="border:0;padding:18px 0 0;margin-top:14px">
       <div class="derechos">© 2026 isemperadorBR · Todos los derechos reservados</div>
+      <div id="appVersion" style="text-align:center;font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.04em">Rx Pro</div>
     </div>
   </div>
   <datalist id="dlSpec">
@@ -3486,6 +3487,7 @@ function closeModal(){ const m=$('#modal'); m.classList.remove('on'); m.innerHTM
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 /* ==================== Estado ==================== */
+const RX_VER = 'v1.7.0';
 const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme', token:'rxpro.token', nube:'rxpro.nube'};
 const DEF_SETTINGS = {color:'#0b3a6f', font:'sans', density:'normal', showDx:true, showDemo:true, showQr:true, draft:true, legal:true, copyright:true};
 const COLORES = ['#0b3a6f','#0f7a4d','#7a1f2b','#4a2f7a','#0a5fa8','#8a5a00','#1f2937','#a8324a'];
@@ -3561,6 +3563,12 @@ $('#formLogin').addEventListener('submit', async e=>{
     else { badField('fLoginEmail',true); toast('bad','Cuenta no encontrada','Revisa el correo o crea la cuenta en «Crear cuenta».'); }
     return;
   }
+  /* Nunca se cae al modo local si el servidor está publicado */
+  if(HAY_API === true){
+    if(btn) btn.disabled = false;
+    toast('bad','No se pudo iniciar sesión', errTxt(enLinea && enLinea.error), 7000);
+    return;
+  }
 
   /* 2) Sin base de datos (o sin internet): modo local, como siempre. */
   const users = LS.get(K.users,{});
@@ -3621,6 +3629,21 @@ $('#formSignup').addEventListener('submit', async e=>{
   if(enLinea && enLinea.error === 'email_en_uso'){
     if(btn) btn.disabled = false;
     toast('bad','Ese correo ya tiene cuenta','Inicia sesión en la otra pestaña.'); return;
+  }
+  if(enLinea && enLinea.error === 'sin_base' && HAY_API === true){
+    /* el servidor está publicado pero la base no responde: no se permite crear
+       cuentas locales, porque quedarían fuera del control del administrador */
+    if(btn) btn.disabled = false;
+    toast('bad','Registro no disponible','El servidor no puede guardar cuentas ahora. Inténtalo más tarde.', 7000); return;
+  }
+  if(enLinea && enLinea.error && enLinea.error !== 'sin_api' && enLinea.error !== 'sin_red'){
+    if(btn) btn.disabled = false;
+    toast('bad','No se pudo crear la cuenta', errTxt(enLinea.error), 7000); return;
+  }
+  if(enLinea && (enLinea.error === 'sin_api' || enLinea.error === 'sin_red') && HAY_API === true){
+    /* sin conexión, pero el sitio SÍ tiene servidor: se bloquea, no se cae al local */
+    if(btn) btn.disabled = false;
+    toast('bad','Sin conexión','No se pudo contactar al servidor. Revisa tu internet e inténtalo otra vez.', 7000); return;
   }
 
   /* Modo local (sin base de datos conectada) */
@@ -5156,8 +5179,10 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
 }
 
 /* ==================== Arranque ==================== */
-(function boot(){
+(async function boot(){
   const theme = LS.get(K.theme,'light') || 'light';
+  const av = $('#appVersion');
+  if(av) av.textContent = 'Rx Pro · ' + RX_VER;
   applyTheme(theme);
   $('#pFecha').value = new Date().toISOString().slice(0,10);
 
@@ -5176,10 +5201,26 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
   }
 
   if(!STORAGE_OK){ setTimeout(warnNoStorage, 900); }
-  detectarApi();                      // ¿hay base de datos en este sitio?
+  await detectarApi();                // ¿hay servidor + base de datos en este sitio?
 
   const sess = LS.get(K.session,null);
   const email = typeof sess==='string' ? sess : (sess && sess.email);
+  /* Si el sitio funciona con la nube, una sesión puramente local ya no vale:
+     hay que iniciar sesión de verdad. Así nadie queda dentro sin autorización. */
+  if(email && !token()){
+    /* Antes veía la app sin más; ahora debe identificarse en línea.
+       Si el sitio no tiene servidor, se mantiene el modo autónomo de siempre. */
+    if(HAY_API === true){
+      LS.del(K.session);
+      setAuthTab('login');
+      toast('wait','Inicia sesión','Tu cuenta ahora se valida en línea.', 6000);
+      return;
+    }
+    const users = LS.get(K.users,{});
+    if(users[email]){ startSession(users[email]); return; }
+    setAuthTab('login');
+    return;
+  }
   if(email){
     /* con sesión en línea guardada, se recupera el perfil de la base */
     if(token()){
