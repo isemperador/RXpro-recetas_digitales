@@ -913,6 +913,7 @@ body.is-verify #verify{display:block}
                   <button class="btn btn-ghost btn-sm" type="button" id="btnCambiarClave"><svg><use href="#i-shield"/></svg> Cambiar mi contraseña</button>
                   <button class="btn btn-ghost btn-sm" type="button" id="btnCrearColega"><svg><use href="#i-user"/></svg> Crear cuenta a un colega</button>
                   <button class="btn btn-ghost btn-sm" type="button" id="btnMisCuentas"><svg><use href="#i-lock"/></svg> Mis cuentas</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="btnSolicitudes"><svg><use href="#i-alert"/></svg> Solicitudes <span id="solicitudesBadge" class="badge badge-warn" style="font-size:9px;display:none">0</span></button>
                   <button class="btn btn-ghost btn-sm" type="button" id="btnRestablecerClave" style="display:none"></button>
                 </div>
                 <div class="up-note" style="margin-top:12px"><svg><use href="#i-info"/></svg><span>Con la cuenta en línea, el perfil (firma y logo) y el historial se ven igual desde cualquier teléfono o computadora. <b>La contraseña de las cuentas que tú creas solo la controlas tú</b>: el médico no puede cambiarla.</span></div>
@@ -3549,6 +3550,11 @@ $('#formLogin').addEventListener('submit', async e=>{
     if(btn) btn.disabled = false;
     return;
   }
+  if(enLinea && (enLinea.error === 'pendiente' || enLinea.error === 'rechazado')){
+    if(btn) btn.disabled = false;
+    mostrarEspera({email, nombre:''}, enLinea.error);
+    return;
+  }
   if(enLinea && (enLinea.error === 'clave_mala' || enLinea.error === 'no_existe')){
     if(btn) btn.disabled = false;
     if(enLinea.error === 'clave_mala'){ badField('fLoginPass',true); toast('bad','Contraseña incorrecta','Verifica e inténtalo otra vez.'); }
@@ -3606,6 +3612,12 @@ $('#formSignup').addEventListener('submit', async e=>{
     if(btn) btn.disabled = false;
     return;
   }
+  if(enLinea && enLinea.ok && enLinea.pendiente){
+    HAY_API = true;
+    if(btn) btn.disabled = false;
+    mostrarEspera(enLinea.perfil || {email, nombre:name});
+    return;
+  }
   if(enLinea && enLinea.error === 'email_en_uso'){
     if(btn) btn.disabled = false;
     toast('bad','Ese correo ya tiene cuenta','Inicia sesión en la otra pestaña.'); return;
@@ -3653,12 +3665,54 @@ function startSession(u){
   renderNotices();
   go('nueva');
 }
+/* ==================== Cuenta pendiente de autorización ====================
+   Nadie entra al sistema sin que el administrador lo apruebe.  Cuando alguien
+   se registra por su cuenta, ve esta pantalla (sin acceso a nada) hasta que
+   el administrador lo autorice desde «Solicitudes».                      */
+function mostrarEspera(perfil, motivo){
+  const email = (perfil && perfil.email) || '';
+  const rechazado = motivo === 'rechazado';
+  document.body.classList.add('is-wait');
+  const box = $('#auth');
+  if(box){
+    box.classList.remove('hidden');
+    const card = box.querySelector('.auth-card') || box;
+    card.innerHTML = `
+      <div style="text-align:center;padding:10px 4px">
+        <div style="width:64px;height:64px;margin:0 auto 14px;border-radius:20px;display:grid;place-items:center;
+             background:${rechazado ? 'var(--danger-100)' : 'var(--warn-100)'};color:${rechazado ? 'var(--danger)' : 'var(--warn)'}">
+          <svg style="width:32px;height:32px"><use href="${rechazado ? '#i-alert' : '#i-lock'}"/></svg>
+        </div>
+        <h2 style="font-size:20px;margin-bottom:8px">${rechazado ? 'Acceso no autorizado' : 'Cuenta creada · esperando autorización'}</h2>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.6;max-width:34ch;margin:0 auto 4px">
+          ${rechazado
+            ? 'El administrador de Rx Pro no autorizó el acceso de esta cuenta. Si crees que es un error, comunícate con quien te dio el enlace.'
+            : 'Tu registro se guardó correctamente, pero <b>todavía no puedes entrar</b>. El administrador de Rx Pro debe autorizar tu cuenta. Te avisará cuando esté lista.'}
+        </p>
+        <div class="verify-box" style="margin-top:16px;text-align:left">
+          <div class="small mut">Cuenta solicitada</div>
+          <div style="font-weight:750;font-size:13px;word-break:break-all">${esc(email)}</div>
+          ${perfil && perfil.nombre ? `<div class="small mut mt8">${esc(perfil.nombre)}${perfil.cmp ? ' · CMP ' + esc(perfil.cmp) : ''}</div>` : ''}
+        </div>
+        <div class="row" style="margin-top:18px;gap:8px;justify-content:center">
+          <button class="btn btn-primary" id="btnReintentar">Ya me autorizaron · entrar</button>
+        </div>
+        <button class="link-btn" id="btnVolverLogin" style="margin-top:12px">Volver al inicio de sesión</button>
+        <div class="derechos" style="margin-top:22px;font-size:11px">© 2026 isemperadorBR · Todos los derechos reservados</div>
+      </div>`;
+    const r = $('#btnReintentar'); if(r) r.onclick = ()=>location.reload();
+    const v = $('#btnVolverLogin'); if(v) v.onclick = ()=>{ document.body.classList.remove('is-wait'); location.reload(); };
+  }
+  toast(rechazado ? 'bad' : 'wait', rechazado ? 'Acceso no autorizado' : 'Cuenta pendiente',
+        rechazado ? 'El administrador rechazó esta cuenta.' : 'El administrador debe autorizar tu cuenta.', 8000);
+}
+
 /* Convierte el perfil que devuelve la base de datos al formato local */
 function perfilDesdeNube(p, email){
   p = p || {};
   return {
     email: p.email || email, nombre:p.nombre || '', cmp:p.cmp || '', rne:p.rne || '',
-    propietario: p.propietario || '',
+    propietario: p.propietario || '', rol: p.rol || '', estado: p.estado || '',
     especialidad:p.especialidad || 'Medicina General', telefono:p.telefono || '',
     direccion:p.direccion || '', clinica:p.clinica || '',
     firma:p.firma || '', logo:p.logo || '',
@@ -3676,6 +3730,7 @@ async function arrancarConNube(u){
   const cache = LS.get(K.users, {}); cache[u.email] = u; LS.set(K.users, cache);
   startSession(u);
   sincronizarHistorial();
+  if((u.rol || '') === 'admin') setTimeout(()=>revisarSolicitudes(), 1600);
 }
 /* Baja el historial de la nube y lo mezcla con lo que haya en este equipo */
 async function sincronizarHistorial(){
@@ -3819,7 +3874,7 @@ function renderVerify(registro){
         <div class="vf-h"><svg><use href="#i-steth"/></svg><h3>Médico prescriptor</h3></div>
         <div class="vf-name">${esc((d.pres||'').replace(/\./g,' '))||'—'}</div>
         <div class="vf-line">CMP ${esc(d.cmp)||'—'}</div>
-        <a class="vf-link" href="https://cmp.org.pe/" target="_blank" rel="noopener noreferrer">Verificar habilidad en el CMP <svg><use href="#i-external"/></svg></a>
+        <a class="vf-link" href="https://conoceatumedico.cmp.org.pe/index" target="_blank" rel="noopener noreferrer">Verificar en «Conoce a tu Médico» · CMP <svg><use href="#i-external"/></svg></a>
       </div>
 
       <div class="vf-block">
@@ -4190,7 +4245,10 @@ const errTxt = e => ({
   no_existe:'No existe una cuenta con ese correo.',
   email_invalido:'El correo no es válido.',
   faltan_datos:'Faltan el nombre o el CMP.',
-  sin_sesion:'Tu sesión caducó. Vuelve a iniciar sesión.'
+  sin_sesion:'Tu sesión caducó. Vuelve a iniciar sesión.',
+  pendiente:'Tu cuenta está esperando autorización del administrador.',
+  rechazado:'El administrador no autorizó esta cuenta.',
+  sin_permiso:'No tienes permiso para esta acción.'
 }[e] || 'No se pudo completar la operación.');
 
 /* Guarda el perfil en la nube (silencioso: si falla, se reintenta luego) */
@@ -4715,7 +4773,78 @@ function pintarEstadoCuenta(){
   const b2 = $('#btnCambiarClave'); if(b2) b2.style.display = administradaPorOtro ? 'none' : '';
   const b3 = $('#btnRestablecerClave'); if(b3) b3.style.display = administradaPorOtro ? 'none' : 'none';
   const b4 = $('#btnMisCuentas'); if(b4) b4.disabled = !enNube || administradaPorOtro;
+  if(enNube) revisarSolicitudes(true);
 }
+/* ==================== Solicitudes de acceso ====================
+   Cada persona que se registra por su cuenta queda «pendiente». Aquí el
+   administrador ve quién quiere entrar y lo autoriza o lo rechaza.       */
+let avisoSolicitudes = null;
+async function revisarSolicitudes(silencioso){
+  if(!(HAY_API && token())) return;
+  const r = await apiPost('auth', {accion:'pendientes'});
+  if(!(r && r.ok)) return;
+  const pend = r.pendientes || [];
+  const badge = $('#solicitudesBadge');
+  if(badge){
+    badge.textContent = pend.length;
+    badge.style.display = pend.length ? '' : 'none';
+  }
+  const btn = $('#btnSolicitudes');
+  if(btn){ btn.classList.toggle('btn-primary', pend.length > 0); btn.classList.toggle('btn-ghost', pend.length === 0); }
+  if(pend.length && !silencioso && !avisoSolicitudes){
+    toast('wait','Nueva solicitud de acceso',
+      pend.length === 1 ? 'Alguien quiere entrar a tu sistema. Revísalo en «Solicitudes».'
+                        : pend.length + ' personas quieren entrar a tu sistema.', 8000);
+    avisoSolicitudes = true;
+  }
+  if(!pend.length) avisoSolicitudes = null;
+  return r;
+}
+$('#btnSolicitudes').onclick = async ()=>{
+  if(!(HAY_API && token())){
+    toast('bad','Solo en línea','Conecta la base de datos para usar las solicitudes.'); return;
+  }
+  const r = await apiPost('auth', {accion:'pendientes'});
+  if(!(r && r.ok)){ toast('bad','No se pudo consultar', errTxt(r && r.error)); return; }
+  const pend = r.pendientes || [];
+  const todas = r.cuentas || [];
+  const fila = (c, botones) => `
+    <div class="verify-box" style="margin-top:9px">
+      <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+        <div style="min-width:0;flex:1 1 150px">
+          <div style="font-weight:750;font-size:13px">${esc(c.nombre || '(sin nombre)')}</div>
+          <div class="small mut" style="word-break:break-all">${esc(c.email)}</div>
+          <div class="small mut">CMP ${esc(c.cmp || '—')}${c.especialidad ? ' · ' + esc(c.especialidad) : ''}</div>
+        </div>
+        <div class="row" style="gap:6px;flex:none">${botones}</div>
+      </div>
+    </div>`;
+  openModal(`<div class="modal-card" style="max-height:86vh;overflow:auto">
+    <h3>Solicitudes de acceso</h3>
+    <p class="small mut">Nadie puede entrar a tu sistema sin que tú lo autorices.</p>
+    <div class="lbl mt16" style="font-size:11px">PENDIENTES (${pend.length})</div>
+    ${pend.length ? pend.map(c=>fila(c, `
+        <button class="btn btn-ok btn-sm" data-aprobar="${esc(c.email)}">Autorizar</button>
+        <button class="btn btn-danger btn-sm" data-rechazar="${esc(c.email)}">Rechazar</button>`)).join('')
+      : '<p class="small mut" style="padding:8px 0">No hay solicitudes pendientes.</p>'}
+    ${todas.length ? `<div class="lbl mt16" style="font-size:11px">TODAS LAS CUENTAS (${todas.length})</div>
+      ${todas.map(c=>fila(c, `
+        <span class="badge ${c.estado==='aprobado'?'badge-ok':'badge-warn'}" style="font-size:9.5px">${esc(c.estado||'pendiente')}</span>
+        <button class="btn btn-ghost btn-sm" data-eliminar="${esc(c.email)}">Eliminar</button>`)).join('')}` : ''}
+    <div class="modal-acts" style="grid-template-columns:1fr"><button class="btn btn-ghost" onclick="closeModal()">Cerrar</button></div>
+  </div>`);
+  const accion = async (tipo, email, ok) => {
+    const x = await apiPost('auth', {accion:tipo, email});
+    if(x && x.ok){ closeModal(); toast('ok', ok, email, 6000); setTimeout(()=>$('#btnSolicitudes').click(), 350); }
+    else toast('bad','No se pudo', errTxt(x && x.error));
+  };
+  $$('[data-aprobar]').forEach(b=>b.onclick=()=>accion('aprobar', b.getAttribute('data-aprobar'), 'Acceso autorizado'));
+  $$('[data-rechazar]').forEach(b=>b.onclick=()=>accion('rechazar', b.getAttribute('data-rechazar'), 'Acceso rechazado'));
+  $$('[data-eliminar]').forEach(b=>b.onclick=()=>{
+    if(!confirm('¿Eliminar la cuenta '+b.getAttribute('data-eliminar')+'? Esta acción no se puede deshacer.')) return;
+    accion('eliminar', b.getAttribute('data-eliminar'), 'Cuenta eliminada');
+  });
+};
 $('#btnMisCuentas').onclick = async ()=>{
   if(!(HAY_API && token())) return;
   const r = await apiPost('auth', {accion:'mios'});

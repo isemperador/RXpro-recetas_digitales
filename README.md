@@ -148,7 +148,7 @@ Luego abre <http://localhost:8080>.
 | Rutas amigables | `_redirects` |
 
 Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
-`const VERSION = 'rxpro-v1.5.0';`
+`const VERSION = 'rxpro-v1.6.0';`
 
 ---
 
@@ -199,6 +199,24 @@ SELECT fecha, COUNT(*) AS recetas FROM recetas GROUP BY fecha ORDER BY fecha DES
 ```
 
 Para anular una receta: `UPDATE recetas SET estado='anulada' WHERE codigo='RX-…';`
+
+### Control de acceso: nadie entra sin tu autorización
+
+- **La primera cuenta** que se cree en el sistema es la del administrador
+  (tú) y queda aprobada de inmediato.
+- **Quien se registre por su cuenta** queda en estado `pendiente`: ve una
+  pantalla de espera y **no puede entrar** (el servidor le niega la sesión
+  con `403 pendiente`, no basta con esconder botones).
+- Tú los ves en **Mi perfil → Solicitudes**, con un aviso en el menú cuando
+  llega una nueva, y decides **Autorizar** o **Rechazar**.
+- Las cuentas que **tú creas** para colegas nacen aprobadas.
+- El enlace del CMP en la página de verificación apunta a
+  **«Conoce a tu Médico»** (`conoceatumedico.cmp.org.pe`), donde se puede
+  buscar la colegiatura.
+
+> ⚠️ Al aplicar esta versión sobre una base que ya tiene cuentas, marca la
+> tuya como administradora (ver el bloque final de `d1-schema.sql`), o
+> quedarás fuera del sistema.
 
 ### Cuentas en línea y varios dispositivos
 
