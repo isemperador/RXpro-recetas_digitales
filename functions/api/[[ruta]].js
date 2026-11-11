@@ -19,6 +19,10 @@
    dueño de la sesión.
    ============================================================ */
 
+/* Versión del servidor. Se puede consultar abriendo  /api/version  en el
+   navegador: sirve para comprobar de un vistazo qué código está publicado. */
+const API_VERSION = 'v1.6.1';
+
 const JSON_H = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: JSON_H });
 
@@ -385,6 +389,9 @@ export async function onRequest(context) {
   if (m === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_H });
 
   try {
+    /* comprobación rápida de qué versión está publicada (no necesita base) */
+    if (ruta === 'version') return json({ ok: true, api: API_VERSION, rutas: ['registro','auth','perfil','historial'], base: !!env.RX_DB });
+
     if (!env.RX_DB && ruta !== 'registro') return json({ ok: false, error: 'sin_base' }, 503);
 
     if (ruta === 'registro') {
