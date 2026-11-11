@@ -85,7 +85,7 @@ async function leerToken(req) {
   return email;
 }
 
-const PERFIL_COLS = 'email, nombre, cmp, rne, especialidad, telefono, direccion, clinica, firma, logo, ajustes, propietario, creado_en';
+const PERFIL_COLS = 'email, nombre, cmp, rne, especialidad, telefono, direccion, clinica, firma, logo, ajustes, propietario, estado, rol, creado_en';
 /* puede cambiar la contraseña: el dueño de la cuenta o quien la administra */
 function puedeGestionar(registro, quien) {
   if (!registro || !quien) return false;
@@ -98,6 +98,8 @@ const publico = (r) => ({
   clinica: r.clinica, firma: r.firma || '', logo: r.logo || '',
   ajustes: r.ajustes ? JSON.parse(r.ajustes) : null,
   propietario: r.propietario || '',
+  estado: r.estado || 'aprobado',
+  rol: r.rol || 'medico',
   creadoEn: r.creado_en
 });
 
@@ -150,13 +152,30 @@ async function postAuth(env, request) {
     if (!String(b.nombre || '').trim() || !String(b.cmp || '').trim())
       return json({ ok: false, error: 'faltan_datos' }, 400);
 
+    /* Control de acceso: solo entra quien el administrador apruebe.
+       1. La PRIMERA cuenta del sistema (sin dueño) es la del administrador
+          y queda aprobada de inmediato. A partir de ahí, un administrador
+          puede crear cuentas ya aprobadas para sus colegas.
+       2. Cualquier otra cuenta nace «pendiente» y no puede iniciar sesión
+          hasta que el administrador la apruebe.                          */
+    const total = await env.RX_DB.prepare('SELECT COUNT(*) AS n FROM medicos').first();
+    const esPrimera = !total || Number(total.n) === 0;
+
+    let owner = String(b.propietario || '').trim().toLowerCase().slice(0, 120);
+    if (esPrimera) owner = email;              // la primera cuenta se administra a sí misma
+    let aprobado = esPrimera;
+    if (!aprobado && owner) {
+      const admin = await env.RX_DB.prepare('SELECT email, estado, rol FROM medicos WHERE email = ?').bind(owner).first();
+      if (admin && admin.email === owner && (admin.rol || 'medico') === 'admin' && (admin.estado || 'aprobado') === 'aprobado') aprobado = true;
+    }
+
     const ya = await env.RX_DB.prepare('SELECT email FROM medicos WHERE email = ?').bind(email).first();
     if (ya) return json({ ok: false, error: 'email_en_uso' }, 409);
 
     const pass = await nuevaPass(String(b.pass));
     await env.RX_DB.prepare(
-      `INSERT INTO medicos (email, pass, nombre, cmp, rne, especialidad, telefono, direccion, clinica, firma, logo, ajustes, propietario)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO medicos (email, pass, nombre, cmp, rne, especialidad, telefono, direccion, clinica, firma, logo, ajustes, propietario, estado)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email, pass,
       String(b.nombre || '').slice(0, 90), String(b.cmp || '').slice(0, 20),
@@ -164,10 +183,16 @@ async function postAuth(env, request) {
       String(b.telefono || '').slice(0, 30), String(b.direccion || '').slice(0, 140),
       String(b.clinica || '').slice(0, 80),
       b.firma || null, b.logo || null, b.ajustes ? JSON.stringify(b.ajustes) : null,
-      String(b.propietario || '').trim().toLowerCase().slice(0, 120)
+      owner,
+      aprobado ? 'aprobado' : 'pendiente',
+      esPrimera ? 'admin' : 'medico'
     ).run();
 
     const row = await env.RX_DB.prepare(`SELECT ${PERFIL_COLS} FROM medicos WHERE email = ?`).bind(email).first();
+    if (!aprobado) {
+      /* No se entrega sesión: la cuenta espera autorización. */
+      return json({ ok: true, pendiente: true, perfil: publico(row) });
+    }
     return json({ ok: true, token: await crearToken(email), perfil: publico(row) });
   }
 
@@ -177,6 +202,10 @@ async function postAuth(env, request) {
     const row = await env.RX_DB.prepare(`SELECT ${PERFIL_COLS}, pass FROM medicos WHERE email = ?`).bind(email).first();
     if (!row) return json({ ok: false, error: 'no_existe' }, 404);
     if (!(await comprobarPass(String(b.pass || ''), row.pass))) return json({ ok: false, error: 'clave_mala' }, 401);
+    const estado = row.estado || 'aprobado';
+    if (estado !== 'aprobado') {
+      return json({ ok: false, error: estado === 'rechazado' ? 'rechazado' : 'pendiente' }, 403);
+    }
     return json({ ok: true, token: await crearToken(email), perfil: publico(row) });
   }
 
@@ -210,6 +239,44 @@ async function postAuth(env, request) {
     await env.RX_DB.prepare('UPDATE medicos SET pass = ?, actualizado_en = datetime("now") WHERE email = ?')
       .bind(await nuevaPass(String(b.nueva)), objetivo).run();
     return json({ ok: true });
+  }
+
+  /* --- el administrador revisa quién quiere entrar ---
+     Una cuenta es "administrador" si no tiene propietario (es la principal)
+     o si se administra a sí misma. Solo esa cuenta puede aprobar a otros. */
+  if (accion === 'pendientes' || accion === 'aprobar' || accion === 'rechazar' || accion === 'eliminar') {
+    const quien = await leerToken(request);
+    if (!quien) return json({ ok: false, error: 'sin_sesion' }, 401);
+    const yo = await env.RX_DB.prepare('SELECT email, propietario, estado, rol FROM medicos WHERE email = ?').bind(quien).first();
+    if (!yo) return json({ ok: false, error: 'no_existe' }, 404);
+    if ((yo.rol || 'medico') !== 'admin') return json({ ok: false, error: 'sin_permiso' }, 403);
+
+    if (accion === 'pendientes') {
+      const { results } = await env.RX_DB.prepare(
+        `SELECT email, nombre, cmp, especialidad, telefono, estado, creado_en
+         FROM medicos WHERE estado <> 'aprobado' AND email <> ? ORDER BY creado_en ASC LIMIT 100`
+      ).bind(quien).all();
+      const { results: todos } = await env.RX_DB.prepare(
+        'SELECT email, nombre, cmp, especialidad, estado, creado_en FROM medicos WHERE email <> ? ORDER BY creado_en DESC LIMIT 100'
+      ).bind(quien).all();
+      return json({ ok: true, pendientes: results || [], cuentas: todos || [] });
+    }
+
+    const objetivo = String(b.email || '').trim().toLowerCase().slice(0, 120);
+    if (!emailOk(objetivo) || objetivo === quien) return json({ ok: false, error: 'email_invalido' }, 400);
+    const fila = await env.RX_DB.prepare('SELECT email FROM medicos WHERE email = ?').bind(objetivo).first();
+    if (!fila) return json({ ok: false, error: 'no_existe' }, 404);
+
+    if (accion === 'eliminar') {
+      await env.RX_DB.prepare('DELETE FROM medicos WHERE email = ?').bind(objetivo).run();
+      await env.RX_DB.prepare('DELETE FROM recetas_medico WHERE email = ?').bind(objetivo).run();
+      return json({ ok: true, eliminado: objetivo });
+    }
+
+    const nuevo = accion === 'aprobar' ? 'aprobado' : 'rechazado';
+    await env.RX_DB.prepare('UPDATE medicos SET estado = ?, actualizado_en = datetime("now") WHERE email = ?')
+      .bind(nuevo, objetivo).run();
+    return json({ ok: true, estado: nuevo, email: objetivo });
   }
 
   /* --- ¿qué cuentas administro? (para el panel del administrador) --- */
