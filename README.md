@@ -273,3 +273,4 @@ Incluye el generador **qrcode-generator** de Kazuhiko Arase (MIT).
 La nota sobre uso clínico al final del LICENSE no forma parte de la licencia MIT y debe conservarse.
 
 © 2026 **isemperadorBR**. Todos los derechos reservados.
+<!-- deploy 1 -->
