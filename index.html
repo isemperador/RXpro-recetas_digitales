@@ -992,8 +992,7 @@ body.is-verify #verify{display:block}
               <div class="card card-pad">
                 <div class="section-step"><span class="n">3</span> Datos y privacidad</div>
                 <p class="small mut" style="line-height:1.6;margin-bottom:12px">
-                  Todo se guarda <b>solo en este navegador</b> (almacenamiento local). No hay servidor, no se envía nada a internet.
-                  Si borras los datos del navegador, pierdes el historial: usa <b>Respaldar</b> en el historial.
+                  Con tu cuenta en línea, el perfil y el historial se sincronizan con la base de datos de Rx Pro (Cloudflare) para usarlos en tus dispositivos. Este navegador también conserva una copia local. Exporta un respaldo JSON como copia adicional; borrar los datos del navegador no elimina tu cuenta ni lo que ya se sincronizó en la nube.
                 </p>
                 <div class="row">
                   <button class="btn btn-ghost btn-sm" id="btnExportAll"><svg><use href="#i-down"/></svg> Exportar respaldo (.json)</button>
@@ -1019,12 +1018,22 @@ body.is-verify #verify{display:block}
             <div class="row">
               <div>
                 <h3 style="font-size:15px">Avisos de la plataforma</h3>
-                <p class="small mut">A diferencia del sistema original, aquí <b>tú decides</b> si quieres avisos. No hay propaganda política ni anuncios de campaña.</p>
+                <p class="small mut">Aquí encontrarás comunicados sobre novedades, mantenimiento y uso de Rx Pro. Los avisos oficiales los publica el administrador del sistema.</p>
               </div>
               <div class="spacer"></div>
               <button class="btn btn-ghost btn-sm" id="btnReadAll"><svg><use href="#i-check"/></svg> Marcar todo leído</button>
             </div>
           </div>
+          <div id="noticeAdminPanel" class="card card-pad mb16" style="display:none">
+            <h3 style="font-size:14px;margin-bottom:8px">Publicar un aviso</h3>
+            <p class="small mut mb10">El aviso se compartirá con todas las cuentas aprobadas de esta instancia.</p>
+            <form id="noticeForm" class="stack" style="gap:10px">
+              <div class="field"><label for="noticeTitle">Título</label><input class="control" id="noticeTitle" maxlength="100" required placeholder="Ej. Mantenimiento programado"/></div>
+              <div class="field"><label for="noticeMessage">Mensaje</label><textarea class="control" id="noticeMessage" maxlength="1200" rows="4" required placeholder="Escribe el comunicado para los usuarios"></textarea></div>
+              <div><button class="btn btn-primary btn-sm" type="submit" id="btnPublishNotice">Publicar para todos</button></div>
+            </form>
+          </div>
+          <p id="noticeSyncStatus" class="small mut mb10" style="display:none"></p>
           <div id="noticesList"></div>
         </section>
 
@@ -1069,7 +1078,7 @@ body.is-verify #verify{display:block}
             <div class="card card-pad">
               <h3 style="font-size:14.5px;margin-bottom:10px">Preguntas frecuentes</h3>
               <details class="mb10"><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿Dónde se guardan mis recetas?</summary>
-                <p class="small mut mt8" style="line-height:1.6">En el almacenamiento local de este navegador, en tu dispositivo. No se suben a ningún servidor. Si cambias de navegador o borras los datos, no estarán: exporta un respaldo.</p></details>
+                <p class="small mut mt8" style="line-height:1.6">Con una cuenta conectada, el historial se sincroniza en la base de datos de Rx Pro alojada en Cloudflare y también se mantiene una copia local en el navegador. Sin conexión a la nube, los cambios nuevos quedan en este dispositivo hasta que vuelvas a conectarte. El respaldo JSON es una copia adicional; protege el archivo porque puede contener datos sensibles.</p></details>
               <details class="mb10"><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿El QR sirve para que una farmacia valide la receta?</summary>
                 <p class="small mut mt8" style="line-height:1.6">El QR contiene el código único, los datos del prescriptor y el resumen de la prescripción, de modo que el farmacéutico puede contrastar el documento. Es una verificación de integridad del documento, no una validación oficial del CMP ni del MINSA.</p></details>
               <details class="mb10"><summary style="cursor:pointer;font-weight:650;font-size:13.5px">¿Puedo usarla sin internet?</summary>
@@ -1087,7 +1096,7 @@ body.is-verify #verify{display:block}
 
         <footer class="site-footer no-print">
           <div class="derechos">© 2026 <b>isemperadorBR</b>. Todos los derechos reservados.</div>
-          <div class="mut" style="margin-top:4px">Rx Pro · Recetas Médicas Digitales — herramienta de apoyo; no sustituye la firma digital certificada.</div>
+          <div class="mut" style="margin-top:4px">Rx Pro · Recetas Médicas Digitales</div>
         </footer>
       </main>
     </div>
@@ -3490,7 +3499,7 @@ function closeModal(){ const m=$('#modal'); m.classList.remove('on'); m.innerHTM
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 /* ==================== Estado ==================== */
-const RX_VER = 'v1.7.1';
+const RX_VER = 'v1.7.2';
 const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme', token:'rxpro.token', nube:'rxpro.nube'};
 const DEF_SETTINGS = {color:'#0b3a6f', font:'sans', density:'normal', showDx:true, showDemo:true, showQr:true, draft:true, legal:true, copyright:true};
 const COLORES = ['#0b3a6f','#0f7a4d','#7a1f2b','#4a2f7a','#0a5fa8','#8a5a00','#1f2937','#a8324a'];
@@ -3668,8 +3677,8 @@ $('#formSignup').addEventListener('submit', async e=>{
 $('#btnForgot').onclick = ()=>{
   openModal(`<div class="modal-card">
     <h3>Recuperar contraseña</h3>
-    <p>Esta aplicación funciona <b>sin servidor</b>: no hay forma de enviarte un correo de recuperación, porque no existe una base de datos central. La contraseña solo la conoces tú.</p>
-    <p class="mt12" style="font-size:12.5px">Si la olvidaste, crea una cuenta nueva con otro correo. Tus recetas anteriores siguen guardadas en este navegador bajo la cuenta anterior.</p>
+    <p>Rx Pro no envía correos automáticos para restablecer contraseñas. Si tu cuenta pertenece a una instancia en línea, solicita al administrador que restablezca tu acceso; solo él administra las claves de las cuentas que creó.</p>
+    <p class="mt12" style="font-size:12.5px">Si usas el modo autónomo sin base de datos, la contraseña solo existe en este navegador y no se puede recuperar desde otro dispositivo.</p>
     <div class="modal-acts"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div>
   </div>`);
 };
@@ -3690,6 +3699,7 @@ function startSession(u){
   paintSettings();
   paintProfile();
   renderNotices();
+  if(HAY_API && token()) loadSharedNotices();
   go('nueva');
   /* la tarjeta de cuenta decide qué botones ve el administrador */
   if(typeof pintarEstadoCuenta === 'function') pintarEstadoCuenta();
@@ -3994,6 +4004,7 @@ function go(v){
   if(v==='historial') renderHistory();
   if(v==='perfil') paintProfile();
   if(v==='ajustes') paintSettings();
+  if(v==='avisos') loadSharedNotices();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 $$('[data-view]').forEach(b=>b.onclick=()=>go(b.getAttribute('data-view')));
@@ -4964,7 +4975,7 @@ $('#btnCambiarClave').onclick = ()=>{
   }
   if(!(HAY_API && token())){
     openModal(`<div class="modal-card"><h3>Cambiar contraseña</h3>
-      <p>Esta copia funciona sin base de datos, así que la contraseña vive solo en este navegador. Si la olvidaste, crea una cuenta nueva con otro correo: tus recetas anteriores siguen guardadas.</p>
+      <p>Esta instalación no tiene una sesión en línea activa. En modo autónomo, la contraseña se conserva solo en este navegador; no hay recuperación automática por correo.</p>
       <div class="modal-acts"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div></div>`);
     return;
   }
@@ -5153,8 +5164,8 @@ $('#fileImport').onchange = e=>{
   e.target.value='';
 };
 $('#btnEraseAll').onclick = ()=>{
-  openModal(`<div class="modal-card"><h3 style="color:var(--danger)">Borrar todos mis datos</h3>
-    <p>Se eliminarán tu perfil, tu firma, tus ajustes y <b>las ${ST.recs.length} recetas</b> guardadas en este navegador. Esta acción no se puede deshacer.</p>
+  openModal(`<div class="modal-card"><h3 style="color:var(--danger)">Borrar datos de este dispositivo</h3>
+    <p>Se eliminarán la copia local de tu perfil, firma, ajustes y <b>las ${ST.recs.length} recetas</b> de este navegador. Esto <b>no elimina tu cuenta ni el historial ya sincronizado en Cloudflare</b>.</p>
     <p class="mt8 small mut">Descarga antes un respaldo si quieres conservarlas.</p>
     <div class="modal-acts"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" id="doErase">Sí, borrar todo</button></div></div>`);
   $('#doErase').onclick = ()=>{
@@ -5162,38 +5173,79 @@ $('#btnEraseAll').onclick = ()=>{
     LS.del(dataKey('rec')); LS.del(dataKey('set')); LS.del(dataKey('draft'));
     const users = LS.get(K.users,{}); delete users[email]; LS.set(K.users,users);
     closeModal(); logout();
-    toast('ok','Datos eliminados','Tu cuenta local fue borrada.');
+    toast('ok','Copia local eliminada','La información sincronizada en la nube no se modificó.');
   };
 };
 
-/* ==================== Avisos ==================== */
+/* ==================== Avisos compartidos ==================== */
 const NOTICES = [
-  {id:'n1', t:'Bienvenido a Rx Pro', ic:'#i-shield', d:'Esta es la versión autónoma: todo se guarda en tu navegador. Exporta un respaldo periódicamente desde Ajustes o el Historial.', when:'Siempre visible'},
-  {id:'n2', t:'Sin anuncios ni propaganda', ic:'#i-check', d:'A diferencia de otras plataformas, aquí no se muestran campañas electorales ni publicidad de terceros dentro de la aplicación. El espacio de avisos lo controlas tú.', when:'Política del producto'},
-  {id:'n3', t:'Recuerda: no es receta electrónica certificada', ic:'#i-alert', d:'Una imagen de firma no equivale a firma digital (Ley 27269). Para actos que exijan firma digital, usa tu certificado de entidad acreditada.', when:'Recordatorio legal'},
-  {id:'n4', t:'Campos obligatorios DIGEMID', ic:'#i-info', d:'Dirección y teléfono del consultorio, medicamento en DCI, concentración, forma farmacéutica, dosis, frecuencia y duración. Revísalos en Ayuda legal.', when:'Guía rápida'}
+  {id:'n1', t:'Respalda tu información', ic:'#i-shield', d:'Cuando usas una cuenta en línea, tu perfil y tu historial se sincronizan con Rx Pro. El archivo JSON es una copia adicional: guárdalo de forma segura porque puede contener datos sensibles.', when:'Privacidad y respaldo'},
+  {id:'n2', t:'Comunicados de Rx Pro', ic:'#i-check', d:'Los avisos publicados por el administrador aparecen aquí para todas las cuentas aprobadas de esta instancia.', when:'Información del sistema'},
+  {id:'n3', t:'Firma digital certificada', ic:'#i-alert', d:'La imagen de firma del perfil no equivale a una firma digital certificada. Para trámites que la exijan, utiliza un certificado emitido por una entidad acreditada.', when:'Recordatorio legal'},
+  {id:'n4', t:'Campos de la receta', ic:'#i-info', d:'Revisa dirección y teléfono del consultorio, medicamento en DCI, concentración, forma farmacéutica, dosis, frecuencia y duración. Consulta Ayuda legal.', when:'Guía rápida'}
 ];
+let sharedNotices = [];
+let noticeStatus = '';
+function allNotices(){ return NOTICES.concat(sharedNotices); }
+function noticeAdmin(){ return !!(HAY_API && token() && ST.user && ST.user.rol === 'admin'); }
 function renderNotices(){
   const c=$('#noticesList'); if(!c) return;
   const read = LS.get(dataKey('notices'), []) || [];
-  c.innerHTML = NOTICES.map(n=>{
-    const isRead = read.includes(n.id);
-    return `<div class="notice" style="opacity:${isRead?0.62:1}">
-      <div class="nic"><svg><use href="${n.ic}"/></svg></div>
-      <div style="flex:1">
-        <div class="row" style="gap:8px"><h5>${esc(n.t)}</h5>${isRead?'<span class="badge badge-line" style="font-size:9.5px">Leído</span>':'<span class="badge badge-soft" style="font-size:9.5px">Nuevo</span>'}</div>
-        <p>${esc(n.d)}</p><div class="when">${esc(n.when)}</div>
+  const list = allNotices();
+  const panel=$('#noticeAdminPanel'); if(panel) panel.style.display=noticeAdmin()?'':'none';
+  const status=$('#noticeSyncStatus'); if(status){ status.textContent=noticeStatus; status.style.display=noticeStatus?'':'none'; }
+  c.innerHTML = list.length ? list.map(n=>{
+    const id=String(n.id), titulo=n.titulo || n.t, mensaje=n.mensaje || n.d;
+    const when=n.creado_en ? ('Publicado '+String(n.creado_en)) : n.when;
+    const remote=sharedNotices.some(x=>String(x.id)===id);
+    const isRead = read.includes(id);
+    return `<div class="notice" style="opacity:${isRead?0.68:1}">
+      <div class="nic"><svg><use href="${remote?'#i-bell':(n.ic||'#i-info')}"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div class="row" style="gap:8px;flex-wrap:wrap"><h5>${esc(titulo)}</h5>${isRead?'<span class="badge badge-line" style="font-size:9.5px">Leído</span>':'<span class="badge badge-soft" style="font-size:9.5px">Nuevo</span>'}</div>
+        <p style="white-space:pre-wrap">${esc(mensaje)}</p><div class="when">${esc(when||'')}</div>
       </div>
-      ${isRead?'':`<button class="btn btn-ghost btn-sm" data-read="${n.id}">Leído</button>`}
+      <div class="row" style="gap:6px;flex:none">${isRead?'':`<button class="btn btn-ghost btn-sm" data-read="${esc(id)}">Leído</button>`}${remote&&noticeAdmin()?`<button class="btn btn-danger btn-sm" data-notice-delete="${esc(id)}" title="Eliminar aviso">Eliminar</button>`:''}</div>
     </div>`;
-  }).join('');
+  }).join('') : '<div class="card card-pad small mut">Todavía no hay avisos publicados.</div>';
   $$('#noticesList [data-read]').forEach(b=>b.onclick=()=>{
     const read2 = LS.get(dataKey('notices'), []) || [];
-    read2.push(b.getAttribute('data-read')); LS.set(dataKey('notices'), read2); renderNotices();
+    const id=b.getAttribute('data-read'); if(!read2.includes(id)) read2.push(id);
+    LS.set(dataKey('notices'), read2); renderNotices();
+  });
+  $$('#noticesList [data-notice-delete]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('¿Eliminar este aviso para todos los usuarios?')) return;
+    const r=await apiPost('avisos',{accion:'eliminar',id:b.getAttribute('data-notice-delete')});
+    if(!r || !r.ok){ toast('bad','No se pudo eliminar',errTxt(r&&r.error||'sin_red')); return; }
+    await loadSharedNotices(); toast('ok','Aviso eliminado','Ya no aparecerá para las demás cuentas.');
   });
 }
+async function loadSharedNotices(){
+  if(!(HAY_API && token())){
+    sharedNotices=[];
+    noticeStatus='Los comunicados compartidos se actualizan al iniciar sesión con conexión a internet.';
+    renderNotices(); return;
+  }
+  const r=await apiGet('avisos');
+  if(r && r.ok && Array.isArray(r.avisos)){
+    sharedNotices=r.avisos; noticeStatus='Comunicados sincronizados con la cuenta.';
+  }else{
+    noticeStatus=(r&&r.error==='sin_red')?'Sin conexión: se muestran los avisos guardados en este dispositivo.':'No se pudieron cargar los avisos compartidos. Verifica que la actualización del sistema esté instalada.';
+  }
+  renderNotices();
+}
+$('#noticeForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(!noticeAdmin()){ toast('bad','Sin permiso','Solo el administrador puede publicar avisos.'); return; }
+  const btn=$('#btnPublishNotice'); if(btn) btn.disabled=true;
+  const r=await apiPost('avisos',{accion:'publicar',titulo:$('#noticeTitle').value,mensaje:$('#noticeMessage').value});
+  if(btn) btn.disabled=false;
+  if(!r || !r.ok){ toast('bad','No se pudo publicar',errTxt(r&&r.error||'sin_red')); return; }
+  $('#noticeForm').reset(); await loadSharedNotices();
+  toast('ok','Aviso publicado','Ya está disponible para las cuentas aprobadas.');
+};
 $('#btnReadAll').onclick = ()=>{
-  LS.set(dataKey('notices'), NOTICES.map(n=>n.id)); renderNotices(); toast('ok','Avisos marcados','');
+  LS.set(dataKey('notices'), allNotices().map(n=>String(n.id))); renderNotices(); toast('ok','Avisos marcados','');
 };
 
 /* ==================== FAB: vista previa móvil ==================== */

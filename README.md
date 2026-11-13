@@ -100,7 +100,7 @@ Luego abre <http://localhost:8080>.
 
 | Módulo | Detalle |
 |---|---|
-| **Autenticación** | Registro e inicio de sesión local. Contraseña hasheada con SHA-256. "Recordarme". |
+| **Autenticación** | Cuentas en Cloudflare D1 con acceso sujeto a aprobación del administrador; modo autónomo disponible cuando no hay API. |
 | **Perfil** | Nombre, CMP, RNE, especialidad, teléfono, dirección del consultorio, clínica. Firma (imagen **o dibujada** en canvas) y logo. |
 | **Nueva receta** | Paciente (nombre, edad, sexo, documento), fecha, diagnóstico opcional, alergias, medicamentos múltiples, indicaciones, tipo de receta (simple / controlada). |
 | **Medicamentos** | DCI, concentración, forma farmacéutica (18 opciones), dosis, frecuencia, duración, cantidad total, vía (12 opciones), indicación. **10 plantillas de dosis** con un toque. |
@@ -109,17 +109,17 @@ Luego abre <http://localhost:8080>.
 | **Salida** | Imprimir / Guardar como PDF (A5, A4 o carta), enviar resumen por WhatsApp. |
 | **Historial** | Búsqueda por paciente/código/medicamento/diagnóstico, orden, estadísticas, ver, PDF, WhatsApp, QR, eliminar. |
 | **Ajustes** | 8 colores de receta, tipografía clásica/moderna, densidad, mostrar/ocultar diagnóstico, edad, QR, aviso legal y derecho de autor. |
-| **Privacidad** | Todo en `localStorage`. Exportar/importar respaldo JSON. Botón de borrado total. |
+| **Privacidad** | Caché local más sincronización de perfil e historial en D1 para cuentas en línea. Respaldo JSON e importación. |
 | **PWA** | Instalable, con iconos, atajos y funcionamiento sin conexión. |
 
 ---
 
 ## 🔐 Privacidad y datos
 
-- **No hay servidor.** Nada se transmite. Puedes verificarlo en la pestaña *Network* del navegador: cero peticiones tras la carga.
-- Los datos viven en el `localStorage` del navegador y dispositivo donde usas la app.
-- La contraseña se guarda como hash SHA-256 con sal derivada del correo; aun así, **no reutilices una contraseña importante**.
-- **Si borras los datos del navegador, pierdes el historial.** Usa *Historial → Respaldar* o *Ajustes → Exportar respaldo (.json)* con regularidad.
+- Si usas una cuenta en línea, el perfil y el historial se sincronizan con la base Cloudflare D1 de Rx Pro. También se conserva una copia de trabajo en el navegador.
+- En modo autónomo, los cambios nuevos permanecen en ese navegador hasta que los respaldes; no hay sincronización entre dispositivos.
+- La contraseña se guarda en D1 con PBKDF2-SHA256, no en texto plano.
+- El respaldo JSON es una copia adicional que puede incluir datos sensibles del paciente. Guárdalo en un lugar protegido. Borrar los datos locales del navegador **no elimina** lo ya sincronizado en D1.
 - El diagnóstico es un dato sensible (Ley 29733): puedes ocultarlo en Ajustes para que no se imprima.
 
 ---
@@ -141,14 +141,15 @@ Luego abre <http://localhost:8080>.
 | Colores de la receta | `index.html` → buscar `const COLORES` |
 | Plantillas de dosis | `index.html` → buscar `const PLANTILLAS` |
 | Formas farmacéuticas y vías | `index.html` → buscar `const FORMAS` / `const VIAS` |
-| Avisos internos | `index.html` → buscar `const NOTICES` |
+| Avisos predefinidos y vista | `index.html` → buscar `const NOTICES` |
+| Publicar avisos compartidos | Vista **Avisos** (administrador) y API `/api/avisos` |
 | Texto del derecho de autor | `index.html` → buscar `isemperadorBR` (footer, hoja, login, README) |
 | Nombre / iconos de la PWA | `manifest.webmanifest` y carpeta `assets/` |
 | Cabeceras de seguridad | `_headers` |
 | Rutas amigables | `_redirects` |
 
 Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
-`const VERSION = 'rxpro-v1.7.1';`
+`const VERSION = 'rxpro-v1.7.2';`
 
 ---
 
@@ -156,21 +157,24 @@ Cuando cambies archivos versionados en caché, sube el número en `sw.js`:
 
 ## 🗄️ Base de datos D1 (opcional)
 
-La app funciona sin base de datos. Si la conectas, cada receta emitida queda
-registrada y la página de verificación deja de fiarse solo del QR: compara
-contra el registro, de modo que **un QR inventado sale como «Receta no
-registrada»**. Si no la conectas, todo sigue igual (verificación por huella).
+La app puede funcionar en modo autónomo, pero al conectar D1 habilita cuentas,
+aprobación del administrador, sincronización entre dispositivos, avisos
+compartidos e integridad pública de códigos QR.
 
-**Qué se guarda:** código, huella de integridad, CMP y fecha.
-**Qué NO se guarda:** nombre del paciente, edad, documento, diagnóstico ni
-medicamentos. Así no se administra una base de datos de salud (Ley 29733).
+**Qué guarda D1:** datos de la cuenta profesional; historial de recetas (incluye
+los datos clínicos necesarios para sincronizarlo); comprobantes públicos de
+verificación (código, huella, CMP y fecha); y avisos publicados por el admin.
+El historial solo se entrega a la cuenta autenticada del médico. El respaldo
+JSON es una copia adicional, no sustituye la base sincronizada.
 
 ### Puesta en marcha (una sola vez, todo desde el panel)
 
 1. **Crear la base** — Cloudflare → *Workers y Pages* → **D1** → *Crear base de datos*
    → nombre `rxpro-db`.
-2. **Crear la tabla** — entra a la base → pestaña **Consola** → pega el contenido
-   de `d1-schema.sql` → *Ejecutar*. Debe decir «Ejecutado».
+2. **Crear las tablas iniciales** — solo para una base D1 nueva: pestaña
+   **Consola** → ejecuta `d1-schema.sql`. No vuelvas a ejecutar ese archivo
+   sobre una base que ya contiene datos. Para actualizar una base existente,
+   aplica únicamente la migración indicada en la sección v1.7.2.
 3. **Publicar la API** — el repo ya trae `functions/api/[[ruta]].js`.
    (En el uploader web de GitHub: *Add file → Create new file* → escribe
    `functions/api/[[ruta]].js` en el nombre y pega el archivo.
@@ -205,11 +209,12 @@ Para anular una receta: `UPDATE recetas SET estado='anulada' WHERE codigo='RX-�
 Abre en el navegador: **`tudominio/api/version`**
 
 ```json
-{"ok":true,"api":"v1.6.2","rutas":["registro","auth","perfil","historial"],"base":true}
+{"ok":true,"api":"v1.7.2","rutas":["registro","auth","perfil","historial","avisos"],"base":true}
 ```
 
-- Si sale `v1.6.2` y `"base":true` → todo correcto. (`v1.6.1` también funciona,
-  pero le falta el arreglo del registro de cuentas: ver abajo.)
+- Si sale `v1.7.2` y `"base":true` → API actualizada y D1 conectada.
+- Si sale `v1.6.2` o anterior → actualiza `functions/api/[[ruta]].js`.
+- Si devuelve HTML o 404 → la carpeta `functions/` no se está publicando.
 - Si devuelve HTML o 404 → la carpeta `functions/` no se está publicando.
 - Si sale otra versión → el archivo `functions/api/[[ruta]].js` quedó viejo.
 
@@ -220,7 +225,7 @@ Abre en el navegador: **`tudominio/api/version`**
 ### «Espera, ¿qué versión estoy viendo?»
 
 En la pantalla de inicio de sesión, **debajo del aviso de copyright**, aparece
-la versión de la app (por ejemplo `Rx Pro · v1.7.1`). Si ahí ves `Rx Pro` sin
+la versión de la app (por ejemplo `Rx Pro · v1.7.2`). Si ahí ves `Rx Pro` sin
 número, el navegador está usando una copia vieja en caché.
 
 Y para el servidor, abre **`/api/version`**.
@@ -309,10 +314,13 @@ La nota sobre uso clínico al final del LICENSE no forma parte de la licencia MI
 
 | Versión | Qué arregla |
 |---|---|
+| **v1.7.2** | Avisos compartidos: el administrador publica y elimina comunicados visibles para todas las cuentas aprobadas; el servidor exige rol admin. Añade migración D1 `d1-avisos.sql`. Aclara el uso de Cloudflare y respaldos locales, y retira la frase comparativa de avisos y el texto del pie sobre firma digital certificada. |
 | **v1.7.1** | El **registro de cuentas fallaba** (`error_servidor`: *15 values for 14 columns*): el `INSERT` no incluía la columna `rol`. Era la causa real de los mensajes «No se pudo crear la cuenta / No se pudo completar la operación». Además: mensaje de espera nuevo, panel de **Solicitudes** en el menú lateral con contador, el botón ya no aparece para quien no es administrador, los **rechazados** dejan de aparecer como pendientes, y los errores del servidor se muestran con su detalle. |
 | v1.7.0 | El modo local deja de ser una puerta trasera: registro e inicio de sesión nunca caen al modo local si el sitio tiene base de datos. Se muestra la versión en la pantalla de login. |
 | v1.6.1 | Ruta `/api/version` para comprobar qué API está publicada. |
 | v1.6.0 | Control de acceso con aprobación del administrador. |
+
+**Para actualizar una base D1 existente a v1.7.2:** en Cloudflare → D1 → `rxpro-db` → Consola, ejecuta una sola vez el archivo `d1-avisos.sql` incluido en el ZIP. **No ejecutes de nuevo `d1-schema.sql`** sobre la base existente. Después publica `index.html`, `sw.js` y `functions/api/[[ruta]].js` juntos; `/api/version` debe mostrar `v1.7.2`.
 
 > **Importante:** `index.html` y `functions/api/[[ruta]].js` deben subirse
 > **juntos**. Si solo subes la página, el servidor viejo no tiene `rol` y el
