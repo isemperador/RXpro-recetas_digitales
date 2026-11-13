@@ -12,6 +12,8 @@
      POST /api/auth  {accion:'signup'|'login'|'logout'|'clave', …}
      POST /api/perfil  (Bearer)             → guarda perfil
      GET  /api/historial (Bearer)           → lista las recetas del médico
+     GET  /api/avisos (Bearer)              → avisos para cuentas aprobadas
+     POST /api/avisos (Bearer, admin)       → publica / elimina un aviso
      POST /api/historial (Bearer)           → guarda/actualiza una receta
 
    Privacidad: en `recetas` no se guarda ningún dato del paciente.
@@ -21,7 +23,7 @@
 
 /* Versión del servidor. Se puede consultar abriendo  /api/version  en el
    navegador: sirve para comprobar de un vistazo qué código está publicado. */
-const API_VERSION = 'v1.6.2';
+const API_VERSION = 'v1.7.2';
 
 const JSON_H = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const json = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: JSON_H });
@@ -378,6 +380,48 @@ async function postHistorial(env, request) {
   return json({ ok: true, guardadas: n });
 }
 
+/* ---------------- /api/avisos ---------------- */
+async function getAvisos(env, request) {
+  const quien = await leerToken(request);
+  if (!quien) return json({ ok: false, error: 'sin_sesion' }, 401);
+  const yo = await env.RX_DB.prepare('SELECT estado FROM medicos WHERE email = ?').bind(quien).first();
+  if (!yo) return json({ ok: false, error: 'no_existe' }, 404);
+  if ((yo.estado || 'aprobado') !== 'aprobado') return json({ ok: false, error: 'sin_permiso' }, 403);
+  const { results } = await env.RX_DB.prepare(
+    'SELECT id, titulo, mensaje, creado_por, creado_en FROM avisos ORDER BY creado_en DESC LIMIT 100'
+  ).all();
+  return json({ ok: true, avisos: results || [] });
+}
+async function postAvisos(env, request) {
+  const quien = await leerToken(request);
+  if (!quien) return json({ ok: false, error: 'sin_sesion' }, 401);
+  const yo = await env.RX_DB.prepare('SELECT estado, rol FROM medicos WHERE email = ?').bind(quien).first();
+  if (!yo) return json({ ok: false, error: 'no_existe' }, 404);
+  if ((yo.estado || 'aprobado') !== 'aprobado' || (yo.rol || 'medico') !== 'admin')
+    return json({ ok: false, error: 'sin_permiso' }, 403);
+  let b; try { b = await request.json(); } catch (e) { return json({ ok: false, error: 'json_invalido' }, 400); }
+  const accion = String(b.accion || 'publicar');
+  if (accion === 'eliminar') {
+    const id = String(b.id || '').slice(0, 64);
+    if (!id) return json({ ok: false, error: 'faltan_datos' }, 400);
+    await env.RX_DB.prepare('DELETE FROM avisos WHERE id = ?').bind(id).run();
+    return json({ ok: true, eliminado: id });
+  }
+  if (accion !== 'publicar') return json({ ok: false, error: 'accion_desconocida' }, 400);
+  const titulo = String(b.titulo || '').trim().slice(0, 100);
+  const mensaje = String(b.mensaje || '').trim().slice(0, 1200);
+  if (!titulo || !mensaje) return json({ ok: false, error: 'faltan_datos' }, 400);
+  const id = (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() :
+    Array.from(crypto.getRandomValues(new Uint8Array(16))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  await env.RX_DB.prepare(
+    'INSERT INTO avisos (id, titulo, mensaje, creado_por) VALUES (?, ?, ?, ?)'
+  ).bind(id, titulo, mensaje, quien).run();
+  const aviso = await env.RX_DB.prepare(
+    'SELECT id, titulo, mensaje, creado_por, creado_en FROM avisos WHERE id = ?'
+  ).bind(id).first();
+  return json({ ok: true, aviso });
+}
+
 /* ---------------- enrutador ---------------- */
 
 export async function onRequest(context) {
@@ -390,7 +434,7 @@ export async function onRequest(context) {
 
   try {
     /* comprobación rápida de qué versión está publicada (no necesita base) */
-    if (ruta === 'version') return json({ ok: true, api: API_VERSION, rutas: ['registro','auth','perfil','historial'], base: !!env.RX_DB });
+    if (ruta === 'version') return json({ ok: true, api: API_VERSION, rutas: ['registro','auth','perfil','historial','avisos'], base: !!env.RX_DB });
 
     if (!env.RX_DB && ruta !== 'registro') return json({ ok: false, error: 'sin_base' }, 503);
 
@@ -406,6 +450,10 @@ export async function onRequest(context) {
     if (ruta === 'historial') {
       if (m === 'GET') return await getHistorial(env, request);
       if (m === 'POST') return await postHistorial(env, request);
+    }
+    if (ruta === 'avisos') {
+      if (m === 'GET') return await getAvisos(env, request);
+      if (m === 'POST') return await postAvisos(env, request);
     }
     return json({ ok: false, error: 'ruta_no_encontrada', ruta }, 404);
   } catch (e) {
