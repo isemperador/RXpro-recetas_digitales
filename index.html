@@ -3500,7 +3500,7 @@ function closeModal(){ const m=$('#modal'); m.classList.remove('on'); m.innerHTM
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 /* ==================== Estado ==================== */
-const RX_VER = 'v1.7.3';
+const RX_VER = 'v1.7.4';
 const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme', token:'rxpro.token', nube:'rxpro.nube'};
 const DEF_SETTINGS = {color:'#0b3a6f', font:'sans', density:'normal', showDx:true, showDemo:true, showQr:true, draft:true, legal:true, copyright:true};
 const COLORES = ['#0b3a6f','#0f7a4d','#7a1f2b','#4a2f7a','#0a5fa8','#8a5a00','#1f2937','#a8324a'];
@@ -5187,6 +5187,19 @@ const NOTICES = [
 ];
 let sharedNotices = [];
 let noticeStatus = '';
+/* D1 guarda creado_en en UTC. Mostrarlo con la hora local de Perú (UTC−5). */
+function fechaAvisoLocal(valor){
+  const raw=String(valor||'').trim();
+  if(!raw) return '';
+  let iso=raw.includes('T')?raw:raw.replace(' ','T');
+  if(!/(Z|[+-]\d{2}:?\d{2})$/i.test(iso)) iso+='Z';
+  const d=new Date(iso);
+  if(Number.isNaN(d.getTime())) return raw;
+  return new Intl.DateTimeFormat('es-PE',{
+    timeZone:'America/Lima',day:'2-digit',month:'short',year:'numeric',
+    hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+  }).format(d);
+}
 function allNotices(){ return NOTICES.concat(sharedNotices); }
 function noticeAdmin(){ return !!(HAY_API && token() && ST.user && ST.user.rol === 'admin'); }
 function renderNotices(){
@@ -5204,7 +5217,7 @@ function renderNotices(){
   const status=$('#noticeSyncStatus'); if(status){ status.textContent=noticeStatus; status.style.display=noticeStatus?'':'none'; }
   c.innerHTML = list.length ? list.map(n=>{
     const id=String(n.id), titulo=n.titulo || n.t, mensaje=n.mensaje || n.d;
-    const when=n.creado_en ? ('Publicado '+String(n.creado_en)) : n.when;
+    const when=n.creado_en ? ('Publicado '+fechaAvisoLocal(n.creado_en)) : n.when;
     const remote=sharedNotices.some(x=>String(x.id)===id);
     const isRead = read.includes(id);
     return `<div class="notice" style="opacity:${isRead?0.68:1}">
