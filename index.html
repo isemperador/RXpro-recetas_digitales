@@ -149,7 +149,7 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
 .nav-btn:hover{background:rgba(255,255,255,.08);color:#fff}
 .nav-btn.on{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.13)}
 .nav-btn.on::after{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:#57b0ff}
-.nav-btn#navSolicitudes .pill{background:var(--danger);color:#fff}
+.nav-btn#navSolicitudes .pill,.nav-btn#navAvisos .notice-pill{background:var(--danger);color:#fff}
 .nav-btn#navSolicitudes:not(.has-alert) .pill{display:none}
 .nav-btn .pill{margin-left:auto;background:rgba(87,176,255,.22);color:#cfe6ff;font-size:10.5px;font-weight:800;
   padding:1px 7px;border-radius:999px;letter-spacing:.02em}
@@ -179,9 +179,10 @@ select.control{appearance:none;background-image:url("data:image/svg+xml;charset=
   .sidebar{display:none}
   .mobile-tabs{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;background:color-mix(in srgb,var(--surface) 95%,transparent);
     backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
-  .mobile-tabs button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  .mobile-tabs button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;
     font-size:10px;font-weight:700;color:var(--muted);padding:6px 2px;border-radius:9px;cursor:pointer}
   .mobile-tabs button svg{width:20px;height:20px}
+  .notice-mobile-pill{position:absolute;top:3px;left:calc(50% + 7px);min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--danger);color:#fff;font-size:9px;line-height:15px;font-weight:850;box-shadow:0 0 0 2px var(--surface)}
   .mobile-tabs button.on{color:var(--primary);background:var(--primary-100)}
   .content{padding:16px 14px 92px}
   .topbar{padding:12px 14px}
@@ -701,7 +702,7 @@ body.is-verify #verify{display:block}
         <button class="nav-btn" data-view="perfil"><svg><use href="#i-user"/></svg> Mi perfil</button>
         <button class="nav-btn" id="navSolicitudes" style="display:none"><svg><use href="#i-alert"/></svg> Solicitudes <span class="pill" id="navSolicitudesBadge" style="display:none">0</span></button>
         <button class="nav-btn" data-view="ajustes"><svg><use href="#i-cog"/></svg> Ajustes</button>
-        <button class="nav-btn" data-view="avisos"><svg><use href="#i-bell"/></svg> Avisos</button>
+        <button class="nav-btn" id="navAvisos" data-view="avisos"><svg><use href="#i-bell"/></svg> Avisos <span class="pill notice-pill" id="navAvisosBadge" style="display:none">0</span></button>
         <button class="nav-btn" data-view="ayuda"><svg><use href="#i-help"/></svg> Ayuda legal</button>
       </nav>
       <div class="sidebar-foot">
@@ -1108,7 +1109,7 @@ body.is-verify #verify{display:block}
     <button data-view="historial"><svg><use href="#i-list"/></svg>Historial</button>
     <button data-view="perfil"><svg><use href="#i-user"/></svg>Perfil</button>
     <button data-view="ajustes"><svg><use href="#i-cog"/></svg>Ajustes</button>
-    <button data-view="avisos"><svg><use href="#i-bell"/></svg>Avisos</button>
+    <button data-view="avisos"><svg><use href="#i-bell"/></svg>Avisos<span class="notice-mobile-pill" id="mobileAvisosBadge" style="display:none">0</span></button>
   </nav>
 </div>
 
@@ -3499,7 +3500,7 @@ function closeModal(){ const m=$('#modal'); m.classList.remove('on'); m.innerHTM
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 /* ==================== Estado ==================== */
-const RX_VER = 'v1.7.2';
+const RX_VER = 'v1.7.3';
 const K = {users:'rxpro.users', session:'rxpro.session', theme:'rxpro.theme', token:'rxpro.token', nube:'rxpro.nube'};
 const DEF_SETTINGS = {color:'#0b3a6f', font:'sans', density:'normal', showDx:true, showDemo:true, showQr:true, draft:true, legal:true, copyright:true};
 const COLORES = ['#0b3a6f','#0f7a4d','#7a1f2b','#4a2f7a','#0a5fa8','#8a5a00','#1f2937','#a8324a'];
@@ -5192,6 +5193,13 @@ function renderNotices(){
   const c=$('#noticesList'); if(!c) return;
   const read = LS.get(dataKey('notices'), []) || [];
   const list = allNotices();
+  const pendientes = sharedNotices.filter(n=>!read.includes(String(n.id))).length;
+  ['#navAvisosBadge','#mobileAvisosBadge'].forEach(sel=>{
+    const b=$(sel); if(!b) return;
+    b.textContent=pendientes > 99 ? '99+' : String(pendientes);
+    b.style.display=pendientes ? '' : 'none';
+    b.setAttribute('aria-label',pendientes ? `${pendientes} aviso(s) nuevo(s)` : 'Sin avisos nuevos');
+  });
   const panel=$('#noticeAdminPanel'); if(panel) panel.style.display=noticeAdmin()?'':'none';
   const status=$('#noticeSyncStatus'); if(status){ status.textContent=noticeStatus; status.style.display=noticeStatus?'':'none'; }
   c.innerHTML = list.length ? list.map(n=>{
@@ -5247,6 +5255,12 @@ $('#noticeForm').onsubmit=async e=>{
 $('#btnReadAll').onclick = ()=>{
   LS.set(dataKey('notices'), allNotices().map(n=>String(n.id))); renderNotices(); toast('ok','Avisos marcados','');
 };
+let noticePoller = setInterval(()=>{
+  if(document.visibilityState==='visible' && HAY_API && token() && ST.user) loadSharedNotices();
+}, 45000);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && HAY_API && token() && ST.user) loadSharedNotices();
+});
 
 /* ==================== FAB: vista previa móvil ==================== */
 function openPreviewModal(){
